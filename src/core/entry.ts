@@ -2,6 +2,7 @@ import { bind } from "./resize";
 import { getElement } from "../utils/getElement";
 import { GlobalStore } from "../stores/globalStore";
 import { T_SyncLabelConfig } from "../types/core/entry";
+import { EngineFactory } from "../renderEngine/EngineFactory";
 
 let __initialized = false;
 
@@ -17,6 +18,9 @@ function __loop() {
     globalStore.runLifecycleCallBack("updates");
 
     // render
+    if (globalStore.engine) {
+        globalStore.engine.render();
+    }
 
     // afterUpdates
     globalStore.runLifecycleCallBack("afterUpdates");
@@ -36,10 +40,14 @@ export async function init(config: T_SyncLabelConfig) {
     globalStore.clearLifecycleCallBack("awakes");
 
     // init
-    const element = getElement(config.element);
+    const engine = EngineFactory.generate(config.engine);
+    const { renderer } = engine.init();
+    globalStore.engine = engine;
     // resize
-    if (element) {
-        bind(element, (entry) => {
+    globalStore.resizes = engine.resize;
+    const canvas = renderer.domElement;
+    if (canvas) {
+        bind(canvas, (entry) => {
             for(const resizeFunc of globalStore.resizes) {
                 resizeFunc(entry);
             }

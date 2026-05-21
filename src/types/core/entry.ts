@@ -1,6 +1,7 @@
 import z from "zod/v4";
+import { renderEngineConfigSchema } from "../renderEngine/renderEngine";
 
 const syncLabelConfigSchema = z.object({
-    element: z.union([z.string(), z.instanceof(Element)]).describe("渲染元素选择器或元素对象"),
+    engine: renderEngineConfigSchema.describe("渲染引擎配置"),
 });
 export type T_SyncLabelConfig = z.infer<typeof syncLabelConfigSchema>;

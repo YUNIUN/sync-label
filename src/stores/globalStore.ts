@@ -1,5 +1,6 @@
 import { WebGLRenderer, Camera } from "three";
 import { T_LifecycleCallBack, T_LifecycleType, T_PrivateField, T_ResizeCallBack } from "../types/stores/global";
+import { BaseRenderEngine } from "../renderEngine/BaseRenderEngine";
 
 const __privateFieldMap = new WeakMap<GlobalStore, T_PrivateField>();
 
@@ -64,6 +65,12 @@ export class GlobalStore {
         return __privateFieldMap.get(this)!.resizes;
     }
     // 渲染器
+    public set engine(value: BaseRenderEngine) {
+        __privateFieldMap.get(this)!.engine = value;
+    }
+    public get engine(): BaseRenderEngine | null {
+        return __privateFieldMap.get(this)!.engine;
+    }
 
 
     private static __instance: GlobalStore | null = null;
@@ -79,8 +86,7 @@ export class GlobalStore {
             nextFrames: [],
             destroys: [],
             resizes: [],
-            // renderer: new WebGLRenderer(),
-            // camera: new Camera(),
+            engine: null,
         });
     }
 

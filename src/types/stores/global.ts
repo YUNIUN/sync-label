@@ -1,4 +1,5 @@
 import z from "zod/v4";
+import { BaseRenderEngine } from "../../renderEngine/BaseRenderEngine";
 
 // 生命周期回调函数
 const callBackSchema = z.function({
@@ -33,5 +34,6 @@ const privateFieldSchema = z.object({
     nextFrames: z.array(lifecycleCallBackSchema),
     destroys: z.array(lifecycleCallBackSchema),
     resizes: z.array(resizeCallBackSchema),
+    engine: z.instanceof(BaseRenderEngine).nullable(),
 });
 export type T_PrivateField = z.infer<typeof privateFieldSchema>;

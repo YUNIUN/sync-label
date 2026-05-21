@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "module": "esnext",
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "isolatedModules": true,
+        "useDefineForClassFields": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true, 
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "types": ["jest"],
+        "ignoreDeprecations": "6.0"
+    },
+    "include": ["src", "rollup.config.ts", "dist/**/*"]
+}

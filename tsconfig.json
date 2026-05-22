@@ -16,9 +16,8 @@
         "ignoreDeprecations": "6.0",
         "baseUrl": ".",
         "paths": {
-            "@/reactivity": ["src/reactivity/src"],
             "@/*": ["src/*"]
         }
     },
-    "include": ["src", "rollup.config.ts", "dist/**/*"]
+    "include": ["src", "rollup.config.ts", "dist/**/*", "example"]
 }

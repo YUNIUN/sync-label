@@ -8,7 +8,7 @@ const effectsMap = new Map<any, Function>();
 // 分类数据类型：增、删、改
 const effectDataMap = new WeakMap();
 
-export function useTrigger() {
+export function runTrigger() {
     effectsMap.forEach((fn, key) => {
         if (effectDataMap.has(key)) {
             fn(effectDataMap.get(key));

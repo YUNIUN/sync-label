@@ -1,8 +1,8 @@
 import { bind } from "./resize";
-import { getElement } from "../utils/getElement";
 import { GlobalStore } from "../stores/globalStore";
 import { T_SyncLabelConfig } from "../types/core/entry";
 import { EngineFactory } from "../renderEngine/EngineFactory";
+import { runTrigger } from "../reactivity";
 
 let __initialized = false;
 
@@ -13,6 +13,8 @@ function __loop() {
     
     // beforeUpdates
     globalStore.runLifecycleCallBack("beforeUpdates");
+
+    runTrigger();
 
     // updates
     globalStore.runLifecycleCallBack("updates");
@@ -42,12 +44,14 @@ export async function init(config: T_SyncLabelConfig) {
     // init
     const engine = EngineFactory.generate(config.engine);
     const { renderer } = engine.init();
+    if (!renderer) throw new Error("renderer is null");
     globalStore.engine = engine;
+    globalStore.destroys = { func: engine.destroy, delay: 0 };
     // resize
-    globalStore.resizes = engine.resize;
-    const canvas = renderer.domElement;
-    if (canvas) {
-        bind(canvas, (entry) => {
+    globalStore.resizes = engine.resize.bind(engine);
+    const element = renderer.domElement.parentElement;
+    if (element) {
+        bind(element, (entry) => {
             for(const resizeFunc of globalStore.resizes) {
                 resizeFunc(entry);
             }
@@ -79,4 +83,5 @@ export function destroy() {
     globalStore.clearLifecycleCallBack("afterUpdates");
     globalStore.clearLifecycleCallBack("nextFrames");
     globalStore.clearLifecycleCallBack("destroys");
+    globalStore.clearLifecycleCallBack("resizes");
 }

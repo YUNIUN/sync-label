@@ -13,7 +13,12 @@
         "noEmit": true,
         "allowImportingTsExtensions": true,
         "types": ["jest"],
-        "ignoreDeprecations": "6.0"
+        "ignoreDeprecations": "6.0",
+        "baseUrl": ".",
+        "paths": {
+            "@/reactivity": ["src/reactivity/src"],
+            "@/*": ["src/*"]
+        }
     },
     "include": ["src", "rollup.config.ts", "dist/**/*"]
 }

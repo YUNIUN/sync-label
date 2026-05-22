@@ -1,6 +1,6 @@
 import z from "zod/v4";
-import { colorSchema, vector3Schema, vector4Schema } from "../common";
 import { threejsEngineOutputSchema } from "./threejsEngine";
+import { colorSchema, vector3Schema, vector4Schema } from "../common";
 
 // | 摄像机配置
 // |-- 相机类型
@@ -63,7 +63,7 @@ export type T_SceneConfig = z.infer<typeof sceneConfigSchema>;
 
 // | 渲染器配置
 export const rendererConfigSchema = z.object({
-  element: z.instanceof(Element).describe("渲染目标元素"),
+  element: z.union([z.string(), z.instanceof(Element)]).describe("渲染目标元素"),
   logarithmicDepthBuffer: z
     .boolean()
     .default(true)
@@ -76,7 +76,7 @@ export const rendererConfigSchema = z.object({
   antialias: z.boolean().default(true).describe("是否开启抗锯齿"),
   preserveDrawingBuffer: z
     .boolean()
-    .default(true)
+    .default(false)
     .describe("是否保存绘图缓冲区"),
   powerPreference: z
     .enum(["default", "high-performance", "low-power"])
@@ -96,7 +96,7 @@ const renderEngineTypeSchema = z.enum(["WEBGL", "WEBGPU", "THREEJS"]);
 export type T_RenderEngineType = z.infer<typeof renderEngineTypeSchema>;
 // |-- 渲染引擎配置
 export const renderEngineConfigSchema = z.object({
-  engineType: renderEngineTypeSchema.describe(
+  engineType: renderEngineTypeSchema.describe("THREEJS").describe(
     "渲染引擎类型: WEBGL | WEBGPU | THREEJS",
   ),
   camera: cameraConfigSchema,
@@ -111,3 +111,29 @@ export const engineOutputSchema = z.union([
   // webgpuEngineOutputSchema,
 ]);
 export type T_EngineOutput = z.infer<typeof engineOutputSchema>;
+
+const idTypeSchema = z.string();
+export type T_IDType = z.infer<typeof idTypeSchema>;
+
+export const standaloneAnnotateSchema = z.object({
+  id: idTypeSchema,
+  width: z.number().default(5),
+  height: z.number().default(5),
+  minWidth: z.number().optional(),
+  minHeight: z.number().optional(),
+  maxWidth: z.number().optional(),
+  maxHeight: z.number().optional(),
+  visible: z.boolean().default(true),
+  position: vector3Schema.default({x: 0, y: 0, z: 0}),
+  rotation: vector3Schema.default({x: 0, y: 0, z: 0}),
+  scale: vector3Schema.default({x: 1, y: 1, z: 1}),
+  color: colorSchema.default("#ffffffff"),
+  showID: z.boolean().default(false),
+});
+export type T_StandaloneAnnotate = z.infer<typeof standaloneAnnotateSchema>;
+const standaloneDrawDataSchema = z.object({
+    remove: z.map(idTypeSchema, standaloneAnnotateSchema),
+    append: z.map(idTypeSchema, standaloneAnnotateSchema),
+    modify: z.map(idTypeSchema, standaloneAnnotateSchema)
+});
+export type T_StandaloneDrawData = z.infer<typeof standaloneDrawDataSchema>;

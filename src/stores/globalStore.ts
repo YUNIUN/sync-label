@@ -64,7 +64,7 @@ export class GlobalStore {
     public get resizes(): T_ResizeCallBack[] {
         return __privateFieldMap.get(this)!.resizes;
     }
-    // 渲染器
+    // 渲染引擎
     public set engine(value: BaseRenderEngine) {
         __privateFieldMap.get(this)!.engine = value;
     }

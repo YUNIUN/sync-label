@@ -1,3 +1,10 @@
+import { isArray } from "lodash-es";
+import { getElement } from "../utils/getElement";
+import { BaseRenderEngine } from "./BaseRenderEngine";
+import { standardizeColor } from "../utils/standardizeColor";
+import { T_RenderEngineConfig } from "../types/renderEngine/renderEngine";
+import { T_ThreejsEngineOutput } from "../types/renderEngine/threejsEngine";
+import { StandalonePrimitive } from "./primitives/threejs/standalonePrimitive";
 import {
   WebGLRenderer,
   PerspectiveCamera,
@@ -7,17 +14,29 @@ import {
   Vector3,
   Camera,
   Object3D,
-  Mesh
+  Mesh,
+  BufferGeometry,
+  Material,
 } from "three";
-import { BaseRenderEngine } from "./BaseRenderEngine";
-import { standardizeColor } from "../utils/standardizeColor";
-import { T_RenderEngineConfig } from "../types/renderEngine/renderEngine";
-import { getElement } from "../utils/getElement";
-import { isArray } from "lodash-es";
 
-const __privateFieldMap = new WeakMap<BaseRenderEngine, any>();
+const __privateFieldMap = new WeakMap<
+  ThreejsRenderEngine,
+  T_ThreejsEngineOutput
+>();
 
 export class ThreejsRenderEngine extends BaseRenderEngine {
+  get camera(): Camera | null {
+    return __privateFieldMap.get(this)!.camera;
+  }
+
+  get renderer(): WebGLRenderer | null {
+    return __privateFieldMap.get(this)!.renderer;
+  }
+
+  get scene(): Scene | null {
+    return __privateFieldMap.get(this)!.scene;
+  }
+
   constructor(config: T_RenderEngineConfig) {
     super(config);
     __privateFieldMap.set(this, {
@@ -37,7 +56,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
 
   private __initScene(): Scene {
     const scene = new Scene();
-    __privateFieldMap.get(this).scene = scene;
+    __privateFieldMap.get(this)!.scene = scene;
     if (this.__sceneConfig.background) {
       const background = standardizeColor(this.__sceneConfig.background);
       const factor = 1.0 / 255;
@@ -78,7 +97,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
     }
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
-    __privateFieldMap.get(this).camera = camera;
+    __privateFieldMap.get(this)!.camera = camera;
     return camera;
   }
 
@@ -105,25 +124,26 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
       canvas,
     });
     renderer.outputColorSpace = this.__rendererConfig.outputColorSpace;
-    __privateFieldMap.get(this).renderer = renderer;
+    __privateFieldMap.get(this)!.renderer = renderer;
     return renderer;
   }
 
   public render(): void {
-    const camera = __privateFieldMap.get(this).camera;
-    const scene = __privateFieldMap.get(this).scene;
-    const renderer = __privateFieldMap.get(this).renderer;
+    const camera = __privateFieldMap.get(this)!.camera;
+    const scene = __privateFieldMap.get(this)!.scene;
+    const renderer = __privateFieldMap.get(this)!.renderer;
     if (camera && scene && renderer) {
       renderer.render(scene, camera);
     }
   }
 
   public destroy(): void {
-    const camera: Camera = __privateFieldMap.get(this).camera;
-    const scene: Scene = __privateFieldMap.get(this).scene;
-    const renderer: WebGLRenderer = __privateFieldMap.get(this).renderer;
+    const camera: Camera | null = __privateFieldMap.get(this)!.camera;
+    const scene: Scene | null = __privateFieldMap.get(this)!.scene;
+    const renderer: WebGLRenderer | null =
+      __privateFieldMap.get(this)!.renderer;
     if (camera) {
-      __privateFieldMap.get(this).camera = null;
+      __privateFieldMap.get(this)!.camera = null;
     }
     if (scene) {
       function clearObject3D(obj3d?: Object3D) {
@@ -138,7 +158,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
           }
           if (material) {
             if (isArray(material)) {
-              for(const item of material) {
+              for (const item of material) {
                 item.dispose();
               }
             } else {
@@ -149,34 +169,49 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
         obj3d.clear();
       }
       clearObject3D(scene);
-      __privateFieldMap.get(this).scene = null;
+      __privateFieldMap.get(this)!.scene = null;
     }
     if (renderer) {
       renderer.dispose();
-      __privateFieldMap.get(this).renderer = null;
+      __privateFieldMap.get(this)!.renderer = null;
     }
   }
 
   public resize(entry: ResizeObserverEntry) {
-    const camera = __privateFieldMap.get(this).camera;
-    const renderer = __privateFieldMap.get(this).renderer;
+    if (!__privateFieldMap.get(this)) return;
+    const scene =  __privateFieldMap.get(this)!.scene;
+    const camera = __privateFieldMap.get(this)!.camera;
+    const renderer = __privateFieldMap.get(this)!.renderer;
+    if (!camera || !renderer || !scene) return;
     const { width, height } = entry.contentRect;
     const aspect = width / height;
     if (camera instanceof PerspectiveCamera) {
       camera.aspect = aspect;
     } else {
-      camera.left = width / -2;
-      camera.right  = width / 2;
-      camera.top = height / 2;
-      camera.bottom = height / -2;
+      (camera as OrthographicCamera).left = width / -2;
+      (camera as OrthographicCamera).right = width / 2;
+      (camera as OrthographicCamera).top = height / 2;
+      (camera as OrthographicCamera).bottom = height / -2;
     }
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
+    (camera as OrthographicCamera | PerspectiveCamera).updateProjectionMatrix();
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+    renderer.render(scene, camera);
   }
 
-  public generateStandalonePrimitive(): void{}
-  public generateDependentPrimitive(): void{}
-  public generateDependentLinePrimitive(): void{}
-  public generateDependentTextPrimitive(): void{}
+  public generateStandalonePrimitive(
+    sourceGeometry: BufferGeometry,
+    material: Material,
+    renderOrder: number
+  ): StandalonePrimitive {
+    const standalonePrimitive = new StandalonePrimitive(
+      sourceGeometry,
+      material,
+      renderOrder
+    );
+    return standalonePrimitive;
+  }
+  public generateDependentPrimitive(): void {}
+  public generateDependentLinePrimitive(): void {}
+  public generateDependentTextPrimitive(): void {}
 }

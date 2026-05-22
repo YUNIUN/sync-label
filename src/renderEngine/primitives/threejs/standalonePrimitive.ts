@@ -1,16 +1,17 @@
 import { MAX_COUNT } from "../const";
 import { GlobalStore } from "../../../stores/globalStore";
-import { ThreejsRenderEngine } from "../../ThreejsRenderEngine";
 import { standardizeColor } from "../../../utils/standardizeColor";
-import { BufferGeometry, Euler, InstancedMesh, Material, Object3D, InstancedBufferAttribute, Matrix4 } from "three";
+import { BaseStandalonePrimitive } from "../baseStandalonePrimitive";
+import { BufferGeometry, Euler, InstancedMesh, Material, Object3D, InstancedBufferAttribute, Matrix4, Scene } from "three";
 import { standaloneAnnotateSchema, T_IDType, T_StandaloneAnnotate, T_StandaloneDrawData } from "../../../types/renderEngine/renderEngine";
 
 const __privateFieldMap = new WeakMap<StandalonePrimitive, any>();
 
 // 独立的标注基类
-export class StandalonePrimitive {
+export class StandalonePrimitive extends BaseStandalonePrimitive {
     public count: number;
     constructor(sourceGeometry: BufferGeometry, material: Material, renderOrder: number) {
+        super();
         this.count = 0;
 
         __privateFieldMap.set(this, {
@@ -45,9 +46,9 @@ export class StandalonePrimitive {
         instancedMesh.count = 0;
         instancedMesh.frustumCulled = false;
         instancedMesh.renderOrder = __privateFieldMap.get(this).renderOrder;
-        const engine = GlobalStore.getInstance().engine as unknown as ThreejsRenderEngine;
+        const engine = GlobalStore.getInstance().engine;
         if (!engine) throw new Error('engine is null');
-        const { scene } = engine;
+        const { scene } = engine as unknown as { scene: Scene };
         if (!scene) throw new Error('scene is null');
         scene.add(instancedMesh);
     }

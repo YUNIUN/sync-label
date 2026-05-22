@@ -1,5 +1,5 @@
 import type { BufferGeometry, Material } from "three";
-import type { StandalonePrimitive as ThreeStandalonePrimitive } from "../renderEngine/primitives/threejs/standalonePrimitive";
+import type { BaseStandalonePrimitive } from "../renderEngine/primitives/baseStandalonePrimitive";
 import {
   T_CameraConfig,
   cameraConfigSchema,
@@ -42,7 +42,7 @@ export abstract class BaseRenderEngine {
     sourceGeometry: BufferGeometry,
     material: Material,
     renderOrder: number
-  ): ThreeStandalonePrimitive;
+  ): BaseStandalonePrimitive;
   abstract generateDependentPrimitive(): void;
   abstract generateDependentLinePrimitive(): void;
   abstract generateDependentTextPrimitive(): void;

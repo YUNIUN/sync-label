@@ -1,28 +1,26 @@
-import { isArray } from "lodash-es";
-import { getElement } from "../utils/getElement";
-import { BaseRenderEngine } from "./BaseRenderEngine";
-import { standardizeColor } from "../utils/standardizeColor";
-import { T_RenderEngineConfig } from "../types/renderEngine/renderEngine";
-import { T_ThreejsEngineOutput } from "../types/renderEngine/threejsEngine";
-import { StandalonePrimitive } from "./primitives/threejs/standalonePrimitive";
+import { isArray } from 'lodash-es';
 import {
-  WebGLRenderer,
-  PerspectiveCamera,
-  OrthographicCamera,
-  Scene,
-  Color,
-  Vector3,
-  Camera,
-  Object3D,
-  Mesh,
   BufferGeometry,
+  Camera,
+  Color,
   Material,
-} from "three";
+  Mesh,
+  Object3D,
+  OrthographicCamera,
+  PerspectiveCamera,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 
-const __privateFieldMap = new WeakMap<
-  ThreejsRenderEngine,
-  T_ThreejsEngineOutput
->();
+import { T_RenderEngineConfig } from '../types/renderEngine/renderEngine';
+import { T_ThreejsEngineOutput } from '../types/renderEngine/threejsEngine';
+import { getElement } from '../utils/getElement';
+import { standardizeColor } from '../utils/standardizeColor';
+import { BaseRenderEngine } from './BaseRenderEngine';
+import { StandalonePrimitive } from './primitives/threejs/standalonePrimitive';
+
+const __privateFieldMap = new WeakMap<ThreejsRenderEngine, T_ThreejsEngineOutput>();
 
 export class ThreejsRenderEngine extends BaseRenderEngine {
   get camera(): Camera | null {
@@ -71,7 +69,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
 
   private __initCamera(): OrthographicCamera | PerspectiveCamera {
     let camera: OrthographicCamera | PerspectiveCamera;
-    if (this.__cameraConfig.config.type === "PERSPECTIVE") {
+    if (this.__cameraConfig.config.type === 'PERSPECTIVE') {
       camera = new PerspectiveCamera(
         this.__cameraConfig.config.fov,
         this.__cameraConfig.config.aspect,
@@ -103,15 +101,15 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
 
   private __initRenderer(): WebGLRenderer {
     const element = getElement(this.__rendererConfig.element);
-    if (!element) throw new Error("element is not exist");
+    if (!element) throw new Error('element is not exist');
     let canvas: HTMLCanvasElement;
     if (element instanceof HTMLCanvasElement) {
       canvas = element;
     } else {
-      canvas = document.createElement("canvas");
+      canvas = document.createElement('canvas');
       element.appendChild(canvas);
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
     }
     const renderer = new WebGLRenderer({
       logarithmicDepthBuffer: this.__rendererConfig.logarithmicDepthBuffer,
@@ -140,8 +138,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
   public destroy(): void {
     const camera: Camera | null = __privateFieldMap.get(this)!.camera;
     const scene: Scene | null = __privateFieldMap.get(this)!.scene;
-    const renderer: WebGLRenderer | null =
-      __privateFieldMap.get(this)!.renderer;
+    const renderer: WebGLRenderer | null = __privateFieldMap.get(this)!.renderer;
     if (camera) {
       __privateFieldMap.get(this)!.camera = null;
     }
@@ -179,7 +176,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
 
   public resize(entry: ResizeObserverEntry) {
     if (!__privateFieldMap.get(this)) return;
-    const scene =  __privateFieldMap.get(this)!.scene;
+    const scene = __privateFieldMap.get(this)!.scene;
     const camera = __privateFieldMap.get(this)!.camera;
     const renderer = __privateFieldMap.get(this)!.renderer;
     if (!camera || !renderer || !scene) return;
@@ -202,13 +199,9 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
   public generateStandalonePrimitive(
     sourceGeometry: BufferGeometry,
     material: Material,
-    renderOrder: number
+    renderOrder: number,
   ): StandalonePrimitive {
-    const standalonePrimitive = new StandalonePrimitive(
-      sourceGeometry,
-      material,
-      renderOrder
-    );
+    const standalonePrimitive = new StandalonePrimitive(sourceGeometry, material, renderOrder);
     return standalonePrimitive;
   }
   public generateDependentPrimitive(): void {}

@@ -1,4 +1,4 @@
-export { ref } from "./ref";
-export { effect, runTrigger } from "./effect";
-export { reactive } from "./reactive";
-export { computed } from "./computed";
+export { computed } from './computed';
+export { effect, runTrigger } from './effect';
+export { reactive } from './reactive';
+export { ref } from './ref';

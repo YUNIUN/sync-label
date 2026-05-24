@@ -1,5 +1,13 @@
-export { onAwake, onBeforeStart, onStart, onBeforeUpdate, onUpdate, onAfterUpdate, onNextFrame, onDestroy, onResize } from "./lifecycle";
-
-export { init, destroy } from "./entry";
-
-export { getCamera, getScene, getRenderer } from "./resource";
+export { destroy, init } from './entry';
+export {
+  onAfterUpdate,
+  onAwake,
+  onBeforeStart,
+  onBeforeUpdate,
+  onDestroy,
+  onNextFrame,
+  onResize,
+  onStart,
+  onUpdate,
+} from './lifecycle';
+export { getCamera, getRenderer, getScene } from './resource';

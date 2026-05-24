@@ -1,15 +1,16 @@
-import type { BufferGeometry, Material } from "three";
-import type { BaseStandalonePrimitive } from "../renderEngine/primitives/baseStandalonePrimitive";
+import type { BufferGeometry, Material } from 'three';
+
+import type { BaseStandalonePrimitive } from '../renderEngine/primitives/baseStandalonePrimitive';
 import {
-  T_CameraConfig,
   cameraConfigSchema,
-  T_SceneConfig,
-  sceneConfigSchema,
-  T_RenderEngineConfig,
   rendererConfigSchema,
-  T_RendererConfig,
+  sceneConfigSchema,
+  T_CameraConfig,
   T_EngineOutput,
-} from "../types/renderEngine/renderEngine";
+  T_RenderEngineConfig,
+  T_RendererConfig,
+  T_SceneConfig,
+} from '../types/renderEngine/renderEngine';
 
 export abstract class BaseRenderEngine {
   protected __sceneConfig: T_SceneConfig;
@@ -41,7 +42,7 @@ export abstract class BaseRenderEngine {
   abstract generateStandalonePrimitive(
     sourceGeometry: BufferGeometry,
     material: Material,
-    renderOrder: number
+    renderOrder: number,
   ): BaseStandalonePrimitive;
   abstract generateDependentPrimitive(): void;
   abstract generateDependentLinePrimitive(): void;

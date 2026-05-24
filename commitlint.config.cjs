@@ -16,14 +16,14 @@ module.exports = {
         'perf', // 性能优化
         'ci', // CI配置变更
         'build', // 构建相关
-        'revert' // 回退提交
-      ]
+        'revert', // 回退提交
+      ],
     ],
     // 限制主题最大长度
     'header-max-length': [2, 'always', 72],
     // 限制主题最小长度
     'subject-min-length': [2, 'always', 10],
     // 禁用大小写限制
-    'subject-case': [0, 'never']
-  }
+    'subject-case': [0, 'never'],
+  },
 };

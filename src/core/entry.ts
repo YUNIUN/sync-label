@@ -1,87 +1,87 @@
-import { bind } from "./resize";
-import { GlobalStore } from "../stores/globalStore";
-import { T_SyncLabelConfig } from "../types/core/entry";
-import { EngineFactory } from "../renderEngine/EngineFactory";
-import { runTrigger } from "../reactivity";
+import { runTrigger } from '../reactivity';
+import { EngineFactory } from '../renderEngine/EngineFactory';
+import { GlobalStore } from '../stores/globalStore';
+import { T_SyncLabelConfig } from '../types/core/entry';
+import { bind } from './resize';
 
 let __initialized = false;
 
-function __loop() { 
-    requestAnimationFrame(__loop);
-    const globalStore = GlobalStore.getInstance();
-    if (!globalStore) return;
-    
-    // beforeUpdates
-    globalStore.runLifecycleCallBack("beforeUpdates");
+function __loop() {
+  requestAnimationFrame(__loop);
+  const globalStore = GlobalStore.getInstance();
+  if (!globalStore) return;
 
-    runTrigger();
+  // beforeUpdates
+  globalStore.runLifecycleCallBack('beforeUpdates');
 
-    // updates
-    globalStore.runLifecycleCallBack("updates");
+  runTrigger();
 
-    // render
-    if (globalStore.engine) {
-        globalStore.engine.render();
-    }
+  // updates
+  globalStore.runLifecycleCallBack('updates');
 
-    // afterUpdates
-    globalStore.runLifecycleCallBack("afterUpdates");
+  // render
+  if (globalStore.engine) {
+    globalStore.engine.render();
+  }
 
-    // nextFrames
-    globalStore.runLifecycleCallBack("nextFrames");
+  // afterUpdates
+  globalStore.runLifecycleCallBack('afterUpdates');
+
+  // nextFrames
+  globalStore.runLifecycleCallBack('nextFrames');
 }
 
-export async function init(config: T_SyncLabelConfig) { 
-    if (__initialized) return;
+export async function init(config: T_SyncLabelConfig) {
+  if (__initialized) return;
 
-    const globalStore = GlobalStore.getInstance();
-    if (!globalStore) return;
+  const globalStore = GlobalStore.getInstance();
+  if (!globalStore) return;
 
-    // awakes
-    globalStore.runLifecycleCallBack("awakes");
-    globalStore.clearLifecycleCallBack("awakes");
+  // awakes
+  globalStore.runLifecycleCallBack('awakes');
+  globalStore.clearLifecycleCallBack('awakes');
 
-    // init
-    const engine = EngineFactory.generate(config.engine);
-    const { renderer } = engine.init();
-    if (!renderer) throw new Error("renderer is null");
-    globalStore.engine = engine;
-    globalStore.destroys = { func: engine.destroy, delay: 0 };
-    // resize
-    globalStore.resizes = engine.resize.bind(engine);
-    const element = renderer.domElement.parentElement;
-    if (element) {
-        bind(element, (entry) => {
-            for(const resizeFunc of globalStore.resizes) {
-                resizeFunc(entry);
-            }
-        });
-    } else {
-        console.error("element not found");
-        throw new Error("element not found");
-    }
+  // init
+  const engine = EngineFactory.generate(config.engine);
+  const { renderer } = engine.init();
+  if (!renderer) throw new Error('renderer is null');
+  globalStore.engine = engine;
+  globalStore.destroys = { func: engine.destroy, delay: 0 };
+  // resize
+  globalStore.resizes = engine.resize.bind(engine);
+  const element = renderer.domElement.parentElement;
+  if (element) {
+    bind(element, (entry) => {
+      for (const resizeFunc of globalStore.resizes) {
+        resizeFunc(entry);
+      }
+    });
+  } else {
+    console.error('element not found');
+    throw new Error('element not found');
+  }
 
-    // beforeStarts
-    globalStore.runLifecycleCallBack("beforeStarts");
-    globalStore.clearLifecycleCallBack("beforeStarts");
-    // starts
-    globalStore.runLifecycleCallBack("starts");
-    globalStore.clearLifecycleCallBack("starts");
+  // beforeStarts
+  globalStore.runLifecycleCallBack('beforeStarts');
+  globalStore.clearLifecycleCallBack('beforeStarts');
+  // starts
+  globalStore.runLifecycleCallBack('starts');
+  globalStore.clearLifecycleCallBack('starts');
 
-    __initialized = true;
+  __initialized = true;
 
-    __loop();
+  __loop();
 }
 
 export function destroy() {
-    const globalStore = GlobalStore.getInstance();
-    if (!globalStore) return;
+  const globalStore = GlobalStore.getInstance();
+  if (!globalStore) return;
 
-    globalStore.runLifecycleCallBack("destroys");
-    globalStore.clearLifecycleCallBack("beforeUpdates");
-    globalStore.clearLifecycleCallBack("updates");
-    globalStore.clearLifecycleCallBack("afterUpdates");
-    globalStore.clearLifecycleCallBack("nextFrames");
-    globalStore.clearLifecycleCallBack("destroys");
-    globalStore.clearLifecycleCallBack("resizes");
+  globalStore.runLifecycleCallBack('destroys');
+  globalStore.clearLifecycleCallBack('beforeUpdates');
+  globalStore.clearLifecycleCallBack('updates');
+  globalStore.clearLifecycleCallBack('afterUpdates');
+  globalStore.clearLifecycleCallBack('nextFrames');
+  globalStore.clearLifecycleCallBack('destroys');
+  globalStore.clearLifecycleCallBack('resizes');
 }

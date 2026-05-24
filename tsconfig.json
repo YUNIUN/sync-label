@@ -12,12 +12,12 @@
         "resolveJsonModule": true,
         "noEmit": true,
         "allowImportingTsExtensions": true,
-        "types": ["jest"],
+        "types": ["jest", "vite/client"],
         "ignoreDeprecations": "6.0",
         "baseUrl": ".",
         "paths": {
             "@/*": ["src/*"]
         }
     },
-    "include": ["src", "rollup.config.ts", "dist/**/*", "example"]
+    "include": ["src", "dist/**/*", "example"]
 }

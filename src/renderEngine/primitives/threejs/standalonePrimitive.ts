@@ -235,7 +235,7 @@ export class StandalonePrimitive extends BasePrimitive {
         color,
         content: item.textConfig?.content || id,
         offset: item.textConfig?.offset || { x: 10, y: 2 },
-        fontSize: (item.textConfig?.fontSize || 18) * item.scale.y,
+        fontSize: item.textConfig?.fontSize || 18,
         position: item.position,
         visible: item.visible,
       });
@@ -254,7 +254,7 @@ export class StandalonePrimitive extends BasePrimitive {
         color,
         content: item.textConfig?.content || id,
         offset: item.textConfig?.offset || { x: 10, y: 2 },
-        fontSize: (item.textConfig?.fontSize || 18) * item.scale.y,
+        fontSize: item.textConfig?.fontSize || 18,
         position: item.position,
         visible: item.visible,
       });

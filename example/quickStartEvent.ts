@@ -42,6 +42,9 @@ export function registerEvent() {
         scale: { x: 1, y: 1, z: 1 },
         color,
         showID: true,
+        textConfig: {
+          fontSize: 18,
+        },
       });
     }
     {
@@ -122,6 +125,9 @@ export function registerEvent() {
             x: scale,
             y: scale,
             z: scale,
+          },
+          textConfig: {
+            fontSize: 18 * scale,
           },
         });
         ++animationTime;

@@ -9,9 +9,12 @@ import {
   Scene,
 } from 'three';
 
+import { generateTextMap } from '../../../annotates/threejs/text/generateTextMap';
 import { GlobalStore } from '../../../stores/globalStore';
 import {
+  dependentTextAnnotateSchema,
   standaloneAnnotateSchema,
+  T_DependentTextAnnotate,
   T_IDType,
   T_StandaloneAnnotate,
   T_StandaloneDrawData,
@@ -31,6 +34,8 @@ const __privateFieldMap = new WeakMap<
     // 实例复用
     occupiedSeat: Map<T_IDType, number>; // id => index
     availableSeat: Set<number>; // 可用的index
+    // 文字
+    textMap: Map<T_IDType, T_DependentTextAnnotate>;
   }
 >();
 
@@ -52,7 +57,7 @@ export class StandalonePrimitive extends BasePrimitive {
       availableSeat: new Set<number>(), // 可用的index
       // 拾取八叉树
       // raycastTree: {},
-      // textMap: new Map(),
+      textMap: generateTextMap(),
     });
     this.init();
   }
@@ -215,7 +220,47 @@ export class StandalonePrimitive extends BasePrimitive {
   }
 
   private updateID(data: T_StandaloneDrawData) {
-    // TODO: 处理id文本的逻辑
+    const textMap: Map<T_IDType, T_DependentTextAnnotate> = __privateFieldMap.get(this)!.textMap;
+    data.remove.forEach((_, id) => {
+      textMap.delete(id);
+    });
+    data.append.forEach((item, id) => {
+      if (!item.showID) {
+        return;
+      }
+      const color = standardizeColor(item.color);
+      color.a = 255;
+      const parsed = dependentTextAnnotateSchema.safeParse({
+        id: id,
+        color,
+        content: item.textConfig?.content || id,
+        offset: item.textConfig?.offset || { x: 10, y: 2 },
+        fontSize: (item.textConfig?.fontSize || 18) * item.scale.y,
+        position: item.position,
+        visible: item.visible,
+      });
+      if (!parsed.success) throw new Error(parsed.error.message);
+      textMap.set(id, parsed.data);
+    });
+    data.modify.forEach((item, id) => {
+      if (!item.showID) {
+        textMap.delete(id);
+        return;
+      }
+      const color = standardizeColor(item.color);
+      color.a = 255;
+      const parsed = dependentTextAnnotateSchema.safeParse({
+        id: id,
+        color,
+        content: item.textConfig?.content || id,
+        offset: item.textConfig?.offset || { x: 10, y: 2 },
+        fontSize: (item.textConfig?.fontSize || 18) * item.scale.y,
+        position: item.position,
+        visible: item.visible,
+      });
+      if (!parsed.success) throw new Error(parsed.error.message);
+      textMap.set(id, parsed.data);
+    });
   }
 
   private removeFromRaycastTree(id: T_IDType) {

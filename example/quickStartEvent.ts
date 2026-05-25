@@ -41,20 +41,7 @@ export function registerEvent() {
         rotation: { x: 0, y: 0, z: 0 },
         scale: { x: 1, y: 1, z: 1 },
         color,
-      });
-    }
-    for (let i = 0; i < NUM; ++i) {
-      const id = i.toString();
-      const x = (Math.random() - 0.5) * 100;
-      const z = (Math.random() - 0.5) * 100;
-      const y = 0;
-
-      textMap.set(id, {
-        id,
-        fontSize: 18,
-        position: { x, y, z },
-        color: { r: 255, g: 200, b: 20, a: 255 },
-        content: id,
+        showID: true,
       });
     }
     {

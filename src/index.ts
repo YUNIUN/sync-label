@@ -15,4 +15,4 @@ export { destroy, init } from './core/index';
 export { getCamera, getRenderer, getScene } from './core/index';
 
 // 点类型的标注元素
-export { generatePointMap } from './annotates/index';
+export { generatePointMap, generateTextMap } from './annotates/index';

@@ -17,7 +17,6 @@ export type T_Color = z.infer<typeof colorSchema>;
 export const vector2Schema = z.object({
   x: z.number().default(0),
   y: z.number().default(0),
-  z: z.number().default(0),
 });
 export const vector3Schema = z.object({
   x: z.number().default(0),

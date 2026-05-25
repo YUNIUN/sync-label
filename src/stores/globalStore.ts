@@ -1,4 +1,5 @@
 import { BaseRenderEngine } from '../renderEngine/BaseRenderEngine';
+import { T_TextConfig } from '../types/core/textConfig';
 import {
   T_LifecycleCallBack,
   T_LifecycleType,
@@ -75,6 +76,8 @@ export class GlobalStore {
   public get engine(): BaseRenderEngine | null {
     return __privateFieldMap.get(this)!.engine;
   }
+  // 文本配置
+  public textConfig: T_TextConfig | null = null;
 
   private static __instance: GlobalStore | null = null;
   private constructor() {

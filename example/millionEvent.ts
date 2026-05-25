@@ -1,5 +1,7 @@
-import { Vector3 } from "three";
-import * as SYNC_LABEL from "../src/index";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Vector3 } from 'three';
+
+import * as SYNC_LABEL from '../src/index';
 
 export function registerEvent() {
   let pointMap: any = null;
@@ -8,11 +10,11 @@ export function registerEvent() {
   const NUM = 1000000;
 
   SYNC_LABEL.onAwake(() => {
-    console.log("awake");
+    console.log('awake');
   });
 
   SYNC_LABEL.onBeforeStart(() => {
-    console.log("beforeStart");
+    console.log('beforeStart');
   });
 
   SYNC_LABEL.onStart(() => {
@@ -25,7 +27,11 @@ export function registerEvent() {
       const y = Math.random() - 0.5;
       const vec3 = new Vector3(x, y, z).normalize().multiplyScalar(radius);
 
-      const color = "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+      const color =
+        '#' +
+        Math.floor(Math.random() * 0xffffff)
+          .toString(16)
+          .padStart(6, '0');
       pointMap.set(id, {
         id,
         width: 5,
@@ -49,12 +55,11 @@ export function registerEvent() {
     }
   });
 
-  SYNC_LABEL.onBeforeUpdate(() => {
-  });
+  SYNC_LABEL.onBeforeUpdate(() => {});
 
   SYNC_LABEL.onUpdate(() => {
     if (!pointMap || !camera) return;
-    const factor = Math.PI / 180 * 0.1;
+    const factor = (Math.PI / 180) * 0.1;
     const length = 1600 + Math.sin(frameNum * factor) * 400;
     const x = Math.sin(frameNum * factor);
     const z = Math.cos(frameNum * factor);
@@ -70,10 +75,10 @@ export function registerEvent() {
   });
 
   SYNC_LABEL.onDestroy(() => {
-    console.log("destroy");
+    console.log('destroy');
   });
 
   SYNC_LABEL.onResize((e) => {
-    console.log("resize", e);
+    console.log('resize', e);
   });
 }

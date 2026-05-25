@@ -1,7 +1,7 @@
 import { runTrigger } from '../reactivity';
 import { EngineFactory } from '../renderEngine/EngineFactory';
 import { GlobalStore } from '../stores/globalStore';
-import { T_SyncLabelConfig } from '../types/core/entry';
+import { syncLabelConfigSchema, T_SyncLabelConfig } from '../types/core/entry';
 import { bind } from './resize';
 
 let __initialized = false;
@@ -33,9 +33,18 @@ function __loop() {
 
 export async function init(config: T_SyncLabelConfig) {
   if (__initialized) return;
+  const parsedRes = syncLabelConfigSchema.safeParse(config);
+  if (!parsedRes.success) {
+    console.error(parsedRes.error);
+    throw new Error(`Invalid config ${JSON.stringify(config)}`);
+  }
+  config = parsedRes.data;
 
   const globalStore = GlobalStore.getInstance();
   if (!globalStore) return;
+
+  // textConfig
+  globalStore.textConfig = config.textConfig!;
 
   // awakes
   globalStore.runLifecycleCallBack('awakes');

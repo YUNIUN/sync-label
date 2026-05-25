@@ -17,7 +17,7 @@ import {
   T_StandaloneDrawData,
 } from '../../../types/renderEngine/renderEngine';
 import { standardizeColor } from '../../../utils/standardizeColor';
-import { BaseStandalonePrimitive } from '../baseStandalonePrimitive';
+import { BasePrimitive } from '../basePrimitive';
 import { MAX_COUNT } from '../const';
 
 const __privateFieldMap = new WeakMap<
@@ -35,7 +35,7 @@ const __privateFieldMap = new WeakMap<
 >();
 
 // 独立的标注基类
-export class StandalonePrimitive extends BaseStandalonePrimitive {
+export class StandalonePrimitive extends BasePrimitive {
   public count: number;
   constructor(sourceGeometry: BufferGeometry, material: Material, renderOrder: number) {
     super();
@@ -164,7 +164,6 @@ export class StandalonePrimitive extends BaseStandalonePrimitive {
     // 1. 渲染数据
     const object3D = new Object3D();
     object3D.position.copy(validData.position);
-    object3D.scale.copy(validData.scale);
     object3D.rotation.copy(
       new Euler(validData.rotation.x, validData.rotation.y, validData.rotation.z),
     );
@@ -175,7 +174,11 @@ export class StandalonePrimitive extends BaseStandalonePrimitive {
     const factor = 1.0 / 255;
     instanceColor.setXYZ(index, color.r * factor, color.g * factor, color.b * factor);
     const instanceSize = instancedMesh.geometry.getAttribute('instanceSize');
-    instanceSize.setXY(index, validData.width, validData.height);
+    instanceSize.setXY(
+      index,
+      validData.width * validData.scale.x,
+      validData.height * validData.scale.y,
+    );
     const instanceLimit = instancedMesh.geometry.getAttribute('instanceLimit');
     instanceLimit.setXYZW(
       index,

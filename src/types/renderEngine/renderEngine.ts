@@ -1,6 +1,6 @@
 import z from 'zod/v4';
 
-import { colorSchema, vector3Schema, vector4Schema } from '../common';
+import { colorSchema, vector2Schema, vector3Schema, vector4Schema } from '../common';
 import { threejsEngineOutputSchema } from './threejsEngine';
 
 // | 摄像机配置
@@ -105,25 +105,50 @@ export type T_EngineOutput = z.infer<typeof engineOutputSchema>;
 const idTypeSchema = z.string();
 export type T_IDType = z.infer<typeof idTypeSchema>;
 
-export const standaloneAnnotateSchema = z.object({
+// 基础配置
+const commonAnnotateSchema = z.object({
   id: idTypeSchema,
+  visible: z.boolean().default(true),
+  opacity: z.number().min(0).max(0).default(1),
+  color: colorSchema.default('#ffffffff'),
+  position: vector3Schema.default({ x: 0, y: 0, z: 0 }),
+  data: z.record(z.string(), z.any()).optional().describe('额外数据'),
+});
+
+// 点配置
+const pointShape = z.object({
   width: z.number().default(5),
   height: z.number().default(5),
   minWidth: z.number().optional(),
   minHeight: z.number().optional(),
   maxWidth: z.number().optional(),
   maxHeight: z.number().optional(),
-  visible: z.boolean().default(true),
-  position: vector3Schema.default({ x: 0, y: 0, z: 0 }),
   rotation: vector3Schema.default({ x: 0, y: 0, z: 0 }),
   scale: vector3Schema.default({ x: 1, y: 1, z: 1 }),
-  color: colorSchema.default('#ffffffff'),
   showID: z.boolean().default(false),
-});
+}).shape;
+export const standaloneAnnotateSchema = commonAnnotateSchema.extend(pointShape);
 export type T_StandaloneAnnotate = z.infer<typeof standaloneAnnotateSchema>;
+
+// 文字配置
+const textShape = z.object({
+  content: z.string().default('').describe('文本内容'),
+  fontSize: z.number().default(18).describe('字体尺寸'),
+  offset: vector2Schema.default({ x: 0, y: 0 }).describe('距离position偏移量(屏幕坐标系)'),
+}).shape;
+export const dependentTextAnnotateSchema = commonAnnotateSchema.extend(textShape);
+export type T_DependentTextAnnotate = z.infer<typeof dependentTextAnnotateSchema>;
+
 const standaloneDrawDataSchema = z.object({
   remove: z.map(idTypeSchema, standaloneAnnotateSchema),
   append: z.map(idTypeSchema, standaloneAnnotateSchema),
   modify: z.map(idTypeSchema, standaloneAnnotateSchema),
 });
 export type T_StandaloneDrawData = z.infer<typeof standaloneDrawDataSchema>;
+
+export const dependentTextDrawDataSchema = z.object({
+  append: z.map(idTypeSchema, dependentTextAnnotateSchema),
+  remove: z.map(idTypeSchema, dependentTextAnnotateSchema),
+  modify: z.map(idTypeSchema, dependentTextAnnotateSchema),
+});
+export type T_DependentTextDrawData = z.infer<typeof dependentTextDrawDataSchema>;

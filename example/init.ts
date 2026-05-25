@@ -1,12 +1,12 @@
-import * as SYNC_LABEL from "../src/index";
+import * as SYNC_LABEL from '../src/index';
 
 export async function init() {
   await SYNC_LABEL.init({
     engine: {
-      engineType: "THREEJS",
+      engineType: 'THREEJS',
       camera: {
         config: {
-          type: "PERSPECTIVE",
+          type: 'PERSPECTIVE',
           fov: 75,
           aspect: window.innerWidth / window.innerHeight,
           near: 1,
@@ -29,18 +29,18 @@ export async function init() {
         },
       },
       scene: {
-        background: "#000000",
+        background: '#000000',
       },
       renderer: {
-        element: "#app",
+        element: '#app',
         logarithmicDepthBuffer: true,
-        precision: "highp",
+        precision: 'highp',
         premultipliedAlpha: true,
         antialias: true,
         preserveDrawingBuffer: false,
-        powerPreference: "high-performance",
+        powerPreference: 'high-performance',
         alpha: false,
-        outputColorSpace: "srgb-linear",
+        outputColorSpace: 'srgb-linear',
       },
     },
   });

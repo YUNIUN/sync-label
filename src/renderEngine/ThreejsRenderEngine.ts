@@ -18,6 +18,7 @@ import { T_ThreejsEngineOutput } from '../types/renderEngine/threejsEngine';
 import { getElement } from '../utils/getElement';
 import { standardizeColor } from '../utils/standardizeColor';
 import { BaseRenderEngine } from './BaseRenderEngine';
+import { DependentTextPrimitive } from './primitives/threejs/dependentTextPrimitive';
 import { StandalonePrimitive } from './primitives/threejs/standalonePrimitive';
 
 const __privateFieldMap = new WeakMap<ThreejsRenderEngine, T_ThreejsEngineOutput>();
@@ -206,5 +207,16 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
   }
   public generateDependentPrimitive(): void {}
   public generateDependentLinePrimitive(): void {}
-  public generateDependentTextPrimitive(): void {}
+  public generateDependentTextPrimitive(
+    sourceGeometry: BufferGeometry,
+    material: Material,
+    renderOrder: number,
+  ): DependentTextPrimitive {
+    const dependentTextPrimitive = new DependentTextPrimitive(
+      sourceGeometry,
+      material,
+      renderOrder,
+    );
+    return dependentTextPrimitive;
+  }
 }

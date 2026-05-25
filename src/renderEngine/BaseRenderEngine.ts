@@ -1,6 +1,6 @@
 import type { BufferGeometry, Material } from 'three';
 
-import type { BaseStandalonePrimitive } from '../renderEngine/primitives/baseStandalonePrimitive';
+import type { BasePrimitive } from '../renderEngine/primitives/basePrimitive';
 import {
   cameraConfigSchema,
   rendererConfigSchema,
@@ -43,8 +43,12 @@ export abstract class BaseRenderEngine {
     sourceGeometry: BufferGeometry,
     material: Material,
     renderOrder: number,
-  ): BaseStandalonePrimitive;
+  ): BasePrimitive;
   abstract generateDependentPrimitive(): void;
   abstract generateDependentLinePrimitive(): void;
-  abstract generateDependentTextPrimitive(): void;
+  abstract generateDependentTextPrimitive(
+    sourceGeometry: BufferGeometry,
+    material: Material,
+    renderOrder: number,
+  ): BasePrimitive;
 }

@@ -44,8 +44,16 @@ export abstract class BaseRenderEngine {
     material: Material,
     renderOrder: number,
   ): BasePrimitive;
-  abstract generateDependentPrimitive(): void;
-  abstract generateDependentLinePrimitive(): void;
+  abstract generateDependentPrimitive(
+    sourceGeometry: BufferGeometry,
+    material: Material,
+    renderOrder: number,
+  ): BasePrimitive;
+  abstract generateDependentLinePrimitive(
+    sourceGeometry: BufferGeometry,
+    material: Material,
+    renderOrder: number,
+  ): BasePrimitive;
   abstract generateDependentTextPrimitive(
     sourceGeometry: BufferGeometry,
     material: Material,

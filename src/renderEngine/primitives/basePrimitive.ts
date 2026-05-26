@@ -1,4 +1,5 @@
 import {
+  T_DependentDrawData,
   T_DependentTextDrawData,
   T_IDType,
   T_StandaloneDrawData,
@@ -8,7 +9,7 @@ import {
 export abstract class BasePrimitive {
   constructor() {}
 
-  abstract draw(data?: T_StandaloneDrawData | T_DependentTextDrawData): void;
+  abstract draw(data?: T_StandaloneDrawData | T_DependentTextDrawData | T_DependentDrawData): void;
 
   abstract isFull(): boolean;
 

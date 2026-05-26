@@ -111,12 +111,12 @@ const commonAnnotateSchema = z.object({
   visible: z.boolean().default(true),
   opacity: z.number().min(0).max(1).default(1),
   color: colorSchema.default('#ffffffff'),
-  position: vector3Schema.default({ x: 0, y: 0, z: 0 }),
   data: z.record(z.string(), z.any()).optional().describe('额外数据'),
 });
 
 // 文字配置
 const textSchema = z.object({
+  position: vector3Schema.default({ x: 0, y: 0, z: 0 }),
   content: z.string().default('').describe('文本内容'),
   fontSize: z.number().default(18).describe('字体尺寸'),
   offset: vector2Schema.default({ x: 0, y: 0 }).describe('距离position偏移量(屏幕坐标系)'),
@@ -126,6 +126,7 @@ export type T_DependentTextAnnotate = z.infer<typeof dependentTextAnnotateSchema
 
 // 点配置
 const pointSchema = z.object({
+  position: vector3Schema.default({ x: 0, y: 0, z: 0 }),
   width: z.number().default(5),
   height: z.number().default(5),
   minWidth: z.number().optional(),
@@ -140,6 +141,15 @@ const pointSchema = z.object({
 export const standaloneAnnotateSchema = commonAnnotateSchema.extend(pointSchema.shape);
 export type T_StandaloneAnnotate = z.infer<typeof standaloneAnnotateSchema>;
 
+// 多边形配置
+const polygonSchema = z.object({
+  positions: z.array(vector3Schema).default([]),
+  showID: z.boolean().default(false),
+  textConfig: textSchema.optional(),
+});
+export const dependentAnnotateSchema = commonAnnotateSchema.extend(polygonSchema.shape);
+export type T_DependentAnnotate = z.infer<typeof dependentAnnotateSchema>;
+
 const standaloneDrawDataSchema = z.object({
   remove: z.map(idTypeSchema, standaloneAnnotateSchema),
   append: z.map(idTypeSchema, standaloneAnnotateSchema),
@@ -153,3 +163,10 @@ export const dependentTextDrawDataSchema = z.object({
   modify: z.map(idTypeSchema, dependentTextAnnotateSchema),
 });
 export type T_DependentTextDrawData = z.infer<typeof dependentTextDrawDataSchema>;
+
+export const dependentDrawDataSchema = z.object({
+  append: z.map(idTypeSchema, dependentAnnotateSchema),
+  remove: z.map(idTypeSchema, dependentAnnotateSchema),
+  modify: z.map(idTypeSchema, dependentAnnotateSchema),
+});
+export type T_DependentDrawData = z.infer<typeof dependentDrawDataSchema>;

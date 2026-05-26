@@ -19,6 +19,16 @@ import { standardizeColor } from '../../../utils/standardizeColor';
 import { BasePrimitive } from '../basePrimitive';
 import { MAX_COUNT } from '../const';
 
+type DrawData = {
+  offset: { x: number; y: number };
+  uv: number[];
+  size: { width: number; height: number };
+  color: { r: number; g: number; b: number; a: number };
+  position: { x: number; y: number; z: number };
+  visible: boolean;
+  opacity: number;
+};
+
 const __privateFieldMap = new WeakMap<
   DependentTextPrimitive,
   {
@@ -188,18 +198,7 @@ export class DependentTextPrimitive extends BasePrimitive {
     this.append(data);
   }
 
-  private updateByIndex(
-    index: number,
-    data: {
-      offset: { x: number; y: number };
-      uv: number[];
-      size: { width: number; height: number };
-      color: { r: number; g: number; b: number; a: number };
-      position: { x: number; y: number; z: number };
-      visible: boolean;
-      opacity: number;
-    },
-  ): void {
+  private updateByIndex(index: number, data: DrawData): void {
     const instancedMesh = __privateFieldMap.get(this)!.instancedMesh as InstancedMesh;
     if (!instancedMesh) throw new Error('instancedMesh is null');
     // 1. 渲染数据

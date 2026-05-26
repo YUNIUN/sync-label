@@ -1,30 +1,39 @@
 import {
   BufferGeometry,
-  Euler,
   InstancedBufferAttribute,
   InstancedMesh,
   Material,
   Matrix4,
-  Object3D,
   Scene,
 } from 'three';
 
 import { generateTextMap } from '../../../annotates/threejs/text/generateTextMap';
+import { triangulate3D } from '../../../math/triangulate3D';
 import { GlobalStore } from '../../../stores/globalStore';
+import { T_Vector3 } from '../../../types/common';
 import {
+  dependentAnnotateSchema,
   dependentTextAnnotateSchema,
-  standaloneAnnotateSchema,
+  T_DependentAnnotate,
+  T_DependentDrawData,
   T_DependentTextAnnotate,
   T_IDType,
-  T_StandaloneAnnotate,
-  T_StandaloneDrawData,
 } from '../../../types/renderEngine/renderEngine';
 import { standardizeColor } from '../../../utils/standardizeColor';
 import { BasePrimitive } from '../basePrimitive';
 import { MAX_COUNT } from '../const';
 
+type DrawData = {
+  p1: T_Vector3;
+  p2: T_Vector3;
+  p3: T_Vector3;
+  color: { r: number; g: number; b: number; a: number };
+  visible: boolean;
+  opacity: number;
+};
+
 const __privateFieldMap = new WeakMap<
-  StandalonePrimitive,
+  DependentPrimitive,
   {
     geometry: BufferGeometry;
     material: Material;
@@ -32,15 +41,14 @@ const __privateFieldMap = new WeakMap<
     renderOrder: number;
     lastIndex: number;
     // 实例复用
-    occupiedSeat: Map<T_IDType, number>; // id => index
+    occupiedSeat: Map<T_IDType, Set<number>>; // id => index
     availableSeat: Set<number>; // 可用的index
     // 文字
     textMap: Map<T_IDType, T_DependentTextAnnotate>;
   }
 >();
 
-// 独立的标注基类
-export class StandalonePrimitive extends BasePrimitive {
+export class DependentPrimitive extends BasePrimitive {
   public count: number;
   constructor(sourceGeometry: BufferGeometry, material: Material, renderOrder: number) {
     super();
@@ -53,7 +61,7 @@ export class StandalonePrimitive extends BasePrimitive {
       renderOrder: renderOrder,
       lastIndex: 0,
       // 实例复用
-      occupiedSeat: new Map<T_IDType, number>(), // id => index
+      occupiedSeat: new Map<T_IDType, Set<number>>(), // id => Set<index>
       availableSeat: new Set<number>(), // 可用的index
       // 拾取八叉树
       // raycastTree: {},
@@ -65,28 +73,34 @@ export class StandalonePrimitive extends BasePrimitive {
   private init(): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
-    const geometry: BufferGeometry = privateMap.geometry;
+    const geometry = privateMap.geometry;
     const material = privateMap.material;
     // { shownFlag, alpha, visible }
     geometry.setAttribute(
       'instanceShown',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
-    // { width, height }
+    // P1
     geometry.setAttribute(
-      'instanceSize',
-      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 2), 2),
+      'instanceP1',
+      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
-    // { minWidth, minHeight, maxWidth, maxHeight }
+    // P2
     geometry.setAttribute(
-      'instanceLimit',
-      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 4), 4),
+      'instanceP2',
+      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
-    // { r, g, b }
+    // P3
+    geometry.setAttribute(
+      'instanceP3',
+      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
+    );
+    // color
     geometry.setAttribute(
       'instanceColor',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
+
     const instancedMesh = new InstancedMesh(geometry, material, MAX_COUNT);
     privateMap.instancedMesh = instancedMesh;
     instancedMesh.count = 0;
@@ -99,7 +113,7 @@ export class StandalonePrimitive extends BasePrimitive {
     scene.add(instancedMesh);
   }
 
-  public draw(data?: T_StandaloneDrawData): void {
+  public draw(data?: T_DependentDrawData): void {
     if (data !== void 0) {
       this.remove(data.remove);
       this.append(data.append);
@@ -109,102 +123,120 @@ export class StandalonePrimitive extends BasePrimitive {
     }
   }
 
-  private remove(data: Map<T_IDType, T_StandaloneAnnotate>): void {
+  private remove(data: Map<T_IDType, T_DependentAnnotate>): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
-    const availableSeat = privateMap.availableSeat as Set<number>;
-    const occupiedSeat = privateMap.occupiedSeat as Map<T_IDType, number>;
+    const availableSeat = privateMap.availableSeat;
+    const occupiedSeat = privateMap.occupiedSeat;
     data.forEach((_, id) => {
       if (occupiedSeat.has(id)) {
-        const index = occupiedSeat.get(id)!;
-        availableSeat.add(index);
+        const indexes = occupiedSeat.get(id);
+        if (!indexes) throw new Error('indexes is null');
+        for (const index of indexes) {
+          availableSeat.add(index);
+          this.hideByIndex(index);
+          --this.count;
+        }
         occupiedSeat.delete(id);
-        this.hideByIndex(index);
-        this.removeFromRaycastTree(id);
-        --this.count;
       }
     });
   }
 
-  private append(data: Map<T_IDType, T_StandaloneAnnotate>): void {
+  private append(data: Map<T_IDType, T_DependentAnnotate>): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
-    const availableSeat = privateMap.availableSeat as Set<number>;
-    const occupiedSeat = privateMap.occupiedSeat as Map<T_IDType, number>;
+    const availableSeat = privateMap.availableSeat;
+    const occupiedSeat = privateMap.occupiedSeat;
     data.forEach((data, id) => {
-      let index: number;
-      if (availableSeat.size > 0) {
-        // 存在可复用的位置
-        index = availableSeat.values().next().value!;
-        availableSeat.delete(index);
-      } else {
-        // 新增位置
-        if (MAX_COUNT <= this.count) return;
-        const lastIndex = privateMap.lastIndex;
-        index = lastIndex;
-        privateMap.lastIndex = lastIndex + 1;
+      const parsed = dependentAnnotateSchema.safeParse(data);
+      if (!parsed.success) throw new Error(parsed.error.message);
+      const validData = parsed.data;
+      // 拆分多边形为三角形
+      const upDirect = this.getUpDirect(validData.positions);
+      const indexArr: Array<number> = triangulate3D(data.positions, upDirect);
+      for (let i = 0; i < indexArr.length; i += 3) {
+        const p1: T_Vector3 = data.positions[indexArr[i]];
+        const p2: T_Vector3 = data.positions[indexArr[i + 1]];
+        const p3: T_Vector3 = data.positions[indexArr[i + 2]];
+        const color = standardizeColor(data.color);
+        let index: number;
+        if (availableSeat.size > 0) {
+          const iterator = availableSeat.keys();
+          index = iterator.next().value!;
+          availableSeat.delete(index);
+        } else {
+          if (MAX_COUNT <= this.count) return;
+          const lastIndex = privateMap.lastIndex;
+          index = lastIndex;
+          privateMap.lastIndex = lastIndex + 1;
+        }
+        ++this.count;
+        if (occupiedSeat.has(id)) {
+          occupiedSeat.get(id)!.add(index);
+        } else {
+          const set = new Set<number>();
+          set.add(index);
+          occupiedSeat.set(id, set);
+        }
+        this.updateByIndex(index, {
+          p1,
+          p2,
+          p3,
+          color,
+          opacity: validData.opacity,
+          visible: data.visible,
+        });
       }
-      ++this.count;
-      occupiedSeat.set(id, index);
-      this.updateByIndex(index, data);
-      this.appendToRaycastTree(id, data);
     });
-    const instancedMesh = privateMap.instancedMesh;
+    const instancedMesh = __privateFieldMap.get(this)!.instancedMesh;
     instancedMesh!.count = Math.max(instancedMesh!.count, this.count);
   }
 
-  private modify(data: Map<T_IDType, T_StandaloneAnnotate>): void {
-    const privateMap = __privateFieldMap.get(this);
-    if (!privateMap) throw new Error('privateMap is null');
-    const occupiedSeat = privateMap.occupiedSeat as Map<T_IDType, number>;
-    data.forEach((data, id) => {
-      if (occupiedSeat.has(id)) {
-        const index = occupiedSeat.get(id)!;
-        this.updateByIndex(index, data);
-        this.modifyToRaycastTree(id, data);
-      }
-    });
+  private getUpDirect(positions: T_Vector3[]): 'X' | 'Y' | 'Z' {
+    let xmin = Infinity,
+      ymin = Infinity,
+      zmin = Infinity;
+    let xmax = -Infinity,
+      ymax = -Infinity,
+      zmax = -Infinity;
+    for (const p of positions) {
+      if (xmin > p.x) xmin = p.x;
+      if (ymin > p.y) ymin = p.y;
+      if (zmin > p.z) zmin = p.z;
+      if (xmax < p.x) xmax = p.x;
+      if (ymax < p.y) ymax = p.y;
+      if (zmax < p.z) zmax = p.z;
+    }
+    const xDelta = xmax - xmin;
+    const yDelta = ymax - ymin;
+    const zDelta = zmax - zmin;
+    const minDelta = Math.min(xDelta, yDelta, zDelta);
+    return minDelta === xDelta ? 'X' : minDelta === yDelta ? 'Y' : 'Z';
   }
 
-  private updateByIndex(index: number, data: T_StandaloneAnnotate): void {
-    const privateMap = __privateFieldMap.get(this);
-    if (!privateMap) throw new Error('privateMap is null');
-    const parsed = standaloneAnnotateSchema.safeParse(data);
-    if (!parsed.success) {
-      throw new Error(`standalone annotate data is invalid: ${JSON.stringify(data)}`);
-    }
-    const validData = parsed.data;
-    const instancedMesh = privateMap.instancedMesh as InstancedMesh;
+  private modify(data: Map<string, T_DependentAnnotate>): void {
+    this.remove(data);
+    this.append(data);
+  }
+
+  private updateByIndex(index: number, data: DrawData): void {
+    const instancedMesh = __privateFieldMap.get(this)!.instancedMesh as InstancedMesh;
     if (!instancedMesh) throw new Error('instancedMesh is null');
     // 1. 渲染数据
-    const object3D = new Object3D();
-    object3D.position.copy(validData.position);
-    object3D.rotation.copy(
-      new Euler(validData.rotation.x, validData.rotation.y, validData.rotation.z),
-    );
-    object3D.updateMatrix();
-    instancedMesh.setMatrixAt(index, object3D.matrix);
+    const instanceP1 = instancedMesh.geometry.getAttribute('instanceP1');
+    instanceP1.setXYZ(index, data.p1.x, data.p1.y, data.p1.z);
+    const instanceP2 = instancedMesh.geometry.getAttribute('instanceP2');
+    instanceP2.setXYZ(index, data.p2.x, data.p2.y, data.p2.z);
+    const instanceP3 = instancedMesh.geometry.getAttribute('instanceP3');
+    instanceP3.setXYZ(index, data.p3.x, data.p3.y, data.p3.z);
     const instanceColor = instancedMesh.geometry.getAttribute('instanceColor');
-    const color = standardizeColor(validData.color);
+    const color = data.color;
     const factor = 1.0 / 255;
     instanceColor.setXYZ(index, color.r * factor, color.g * factor, color.b * factor);
-    const instanceSize = instancedMesh.geometry.getAttribute('instanceSize');
-    instanceSize.setXY(
-      index,
-      validData.width * validData.scale.x,
-      validData.height * validData.scale.y,
-    );
-    const instanceLimit = instancedMesh.geometry.getAttribute('instanceLimit');
-    instanceLimit.setXYZW(
-      index,
-      validData.minWidth ?? 0,
-      validData.minHeight ?? 0,
-      validData.maxWidth ?? 0xffffff,
-      validData.maxHeight ?? 0xffffff,
-    );
+
     // 2. 显示元素
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
-    instanceShown.setXYZ(index, 1, color.a * factor, validData.visible ? 1 : 0);
+    instanceShown.setXYZ(index, 1, color.a * factor, data.visible ? 1 : 0);
   }
 
   private hideByIndex(index: number): void {
@@ -218,19 +250,36 @@ export class StandalonePrimitive extends BasePrimitive {
   private needsUpdate() {
     const instancedMesh = __privateFieldMap.get(this)!.instancedMesh;
     if (!instancedMesh) throw new Error('instancedMesh is null');
+    const instanceP1 = instancedMesh.geometry.getAttribute('instanceP1');
+    const instanceP2 = instancedMesh.geometry.getAttribute('instanceP2');
+    const instanceP3 = instancedMesh.geometry.getAttribute('instanceP3');
     const instanceColor = instancedMesh.geometry.getAttribute('instanceColor');
-    const instanceSize = instancedMesh.geometry.getAttribute('instanceSize');
-    const instanceLimit = instancedMesh.geometry.getAttribute('instanceLimit');
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
-    instancedMesh.instanceMatrix.needsUpdate = true;
+    instanceP1.needsUpdate = true;
+    instanceP2.needsUpdate = true;
+    instanceP3.needsUpdate = true;
     instanceColor.needsUpdate = true;
-    instanceSize.needsUpdate = true;
-    instanceLimit.needsUpdate = true;
     instanceShown.needsUpdate = true;
   }
 
-  private updateID(data: T_StandaloneDrawData) {
+  private updateID(data: T_DependentDrawData) {
     const textMap: Map<T_IDType, T_DependentTextAnnotate> = __privateFieldMap.get(this)!.textMap;
+    const center = (positions: Array<T_Vector3>) => {
+      let x = 0,
+        y = 0,
+        z = 0;
+      for (const position of positions) {
+        x += position.x;
+        y += position.y;
+        z += position.z;
+      }
+      return {
+        x: x / positions.length,
+        y: y / positions.length,
+        z: z / positions.length,
+      };
+    };
+
     data.remove.forEach((_, id) => {
       textMap.delete(id);
     });
@@ -244,9 +293,9 @@ export class StandalonePrimitive extends BasePrimitive {
         id: id,
         color,
         content: item.textConfig?.content || id,
-        offset: item.textConfig?.offset || { x: 10, y: 2 },
+        offset: item.textConfig?.offset || { x: 0, y: 0 },
         fontSize: item.textConfig?.fontSize || 18,
-        position: item.position,
+        position: center(item.positions),
         visible: item.visible,
       });
       if (!parsed.success) throw new Error(parsed.error.message);
@@ -263,27 +312,14 @@ export class StandalonePrimitive extends BasePrimitive {
         id: id,
         color,
         content: item.textConfig?.content || id,
-        offset: item.textConfig?.offset || { x: 10, y: 2 },
+        offset: item.textConfig?.offset || { x: 0, y: 0 },
         fontSize: item.textConfig?.fontSize || 18,
-        position: item.position,
+        position: center(item.positions),
         visible: item.visible,
       });
       if (!parsed.success) throw new Error(parsed.error.message);
       textMap.set(id, parsed.data);
     });
-  }
-
-  private removeFromRaycastTree(id: T_IDType) {
-    // TODO: 删除id对应的包围盒
-  }
-
-  private appendToRaycastTree(id: T_IDType, data: T_StandaloneAnnotate) {
-    // TODO: 添加id对应的包围盒
-  }
-
-  private modifyToRaycastTree(id: T_IDType, data: T_StandaloneAnnotate): void {
-    this.removeFromRaycastTree(id);
-    this.appendToRaycastTree(id, data);
   }
 
   public isFull(): boolean {
@@ -295,8 +331,12 @@ export class StandalonePrimitive extends BasePrimitive {
   }
 
   public has(id: T_IDType): boolean {
-    const occupiedSeat = __privateFieldMap.get(this)!.occupiedSeat as Map<T_IDType, number>;
+    const occupiedSeat = __privateFieldMap.get(this)!.occupiedSeat as Map<T_IDType, Set<number>>;
     if (!occupiedSeat) return false;
     return occupiedSeat.has(id);
+  }
+
+  public Fit(id: T_IDType): boolean {
+    return this.count + id.length >= MAX_COUNT;
   }
 }

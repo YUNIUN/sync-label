@@ -39,7 +39,7 @@ export async function init() {
         antialias: true,
         preserveDrawingBuffer: false,
         powerPreference: 'high-performance',
-        alpha: false,
+        alpha: true,
         outputColorSpace: 'srgb-linear',
       },
     },

@@ -6,6 +6,7 @@ import * as SYNC_LABEL from '../src/index';
 export function registerEvent() {
   let pointMap: any = null;
   let textMap: any = null;
+  let polygonMap: any = null;
   let camera: any = null;
   let frameNum: number = 0;
   const NUM = 300;
@@ -21,6 +22,7 @@ export function registerEvent() {
   SYNC_LABEL.onStart(() => {
     pointMap = SYNC_LABEL.generatePointMap();
     textMap = SYNC_LABEL.generateTextMap();
+    polygonMap = SYNC_LABEL.generatePolygonMap();
     for (let i = 0; i < NUM; ++i) {
       const id = i.toString();
       const x = (Math.random() - 0.5) * 100;
@@ -31,7 +33,8 @@ export function registerEvent() {
         '#' +
         Math.floor(Math.random() * 0x7e7e7e + 0x808080)
           .toString(16)
-          .padStart(6, '0');
+          .padStart(6, '0') +
+        '80';
       pointMap.set(id, {
         id,
         width: 15,
@@ -44,6 +47,102 @@ export function registerEvent() {
         showID: true,
         textConfig: {
           fontSize: 18,
+        },
+      });
+    }
+    {
+      let color =
+        '#' +
+        Math.floor(Math.random() * 0x7e7e7e + 0x808080)
+          .toString(16)
+          .padStart(6, '0') +
+        '80';
+      polygonMap.set('1', {
+        id: '1',
+        visible: true,
+        positions: [
+          {
+            x: -50,
+            y: 0,
+            z: -50,
+          },
+          {
+            x: -50,
+            y: 0,
+            z: 50,
+          },
+          {
+            x: 50,
+            y: 0,
+            z: 50,
+          },
+          {
+            x: 50,
+            y: 0,
+            z: -50,
+          },
+          {
+            x: 40,
+            y: 0,
+            z: -50,
+          },
+          {
+            x: 40,
+            y: 0,
+            z: 40,
+          },
+          {
+            x: -40,
+            y: 0,
+            z: 40,
+          },
+          {
+            x: -40,
+            y: 0,
+            z: -50,
+          },
+        ],
+        color,
+        showID: true,
+        textConfig: {
+          fontSize: 30,
+        },
+      });
+      color =
+        '#' +
+        Math.floor(Math.random() * 0x7e7e7e + 0x808080)
+          .toString(16)
+          .padStart(6, '0') +
+        '80';
+      polygonMap.set('2', {
+        id: '2',
+        visible: true,
+        positions: [
+          {
+            x: -2,
+            y: 0,
+            z: -60,
+          },
+          {
+            x: -2,
+            y: 0,
+            z: 60,
+          },
+          {
+            x: 2,
+            y: 0,
+            z: 60,
+          },
+          {
+            x: 2,
+            y: 0,
+            z: -60,
+          },
+        ],
+        color,
+        showID: true,
+        textConfig: {
+          fontSize: 30,
         },
       });
     }
@@ -101,7 +200,8 @@ export function registerEvent() {
               '#' +
               Math.floor(Math.random() * 0x7e7e7e + 0x808080)
                 .toString(16)
-                .padStart(6, '0');
+                .padStart(6, '0') +
+              '80';
             pointMap.set(id, {
               ...data,
               position: { x, y, z },

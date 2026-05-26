@@ -1,7 +1,7 @@
 {
   "name": "sync-label",
   "version": "0.0.1",
-  "description": "",
+  "description": "基于 Three.js 的高性能 3D 标注库，支持点、多边形和文字的实例化渲染与自定义响应式系统",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
@@ -17,15 +17,24 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "prepublishOnly": "pnpm build",
     "prepare": "husky install",
     "build": "vite build --mode lib",
     "demo": "vite example",
     "lint": "eslint src/",
     "format": "prettier --write src/"
   },
-  "keywords": [],
+  "files": ["dist"],
+  "keywords": ["3d", "annotation", "WebGL", "Three.js", "label", "instanced"],
   "author": "YUNIUN",
   "license": "Mozilla Public License 2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YUNIUN/sync-label.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YUNIUN/sync-label/issues"
+  },
   "homepage": "https://github.com/YUNIUN/sync-label",
   "packageManager": "pnpm@10.30.3",
   "type": "module",

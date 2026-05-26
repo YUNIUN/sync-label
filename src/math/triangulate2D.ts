@@ -2,7 +2,6 @@ import { T_Vector2 } from '../types/common';
 import { isConvexPolygon } from './isConvexPolygon';
 import { isPointInsidePolygon } from './isPointInsidePolygon';
 import { Vector2 } from './vector2';
-import { Vector3 } from './vector3';
 
 export function triangulate2D(vectorArr: T_Vector2[]): number[] {
   const result: number[] = [];

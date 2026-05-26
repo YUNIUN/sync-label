@@ -1,5 +1,6 @@
 export const RenderOrderMap = {
-  point: 1300,
-  text: 1500,
   polygon: 1000,
+  point: 1300,
+  arrow: 1400,
+  text: 1500,
 };

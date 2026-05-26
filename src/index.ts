@@ -15,4 +15,9 @@ export { destroy, init } from './core/index';
 export { getCamera, getRenderer, getScene } from './core/index';
 
 // 标注元素
-export { generatePointMap, generatePolygonMap, generateTextMap } from './annotates/index';
+export {
+  generateArrowMap,
+  generatePointMap,
+  generatePolygonMap,
+  generateTextMap,
+} from './annotates/index';

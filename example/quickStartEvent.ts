@@ -7,6 +7,7 @@ export function registerEvent() {
   let pointMap: any = null;
   let textMap: any = null;
   let polygonMap: any = null;
+  let arrowMap: any = null;
   let camera: any = null;
   let frameNum: number = 0;
   const NUM = 300;
@@ -23,6 +24,7 @@ export function registerEvent() {
     pointMap = SYNC_LABEL.generatePointMap();
     textMap = SYNC_LABEL.generateTextMap();
     polygonMap = SYNC_LABEL.generatePolygonMap();
+    arrowMap = SYNC_LABEL.generateArrowMap();
     for (let i = 0; i < NUM; ++i) {
       const id = i.toString();
       const x = (Math.random() - 0.5) * 100;
@@ -48,6 +50,21 @@ export function registerEvent() {
         textConfig: {
           fontSize: 18,
         },
+      });
+    }
+    for (let i = 0; i < NUM; i++) {
+      const id = i.toString();
+      const x = (Math.random() - 0.5) * 100;
+      const z = (Math.random() - 0.5) * 100;
+      const y = 0;
+      arrowMap.set(id, {
+        id,
+        width: 1,
+        height: 3,
+        color: '#72c892',
+        position: { x, y, z },
+        rotation: { x: Math.PI * 0.5, y: 0, z: Math.random() * 2 * Math.PI },
+        showID: false,
       });
     }
     {

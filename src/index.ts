@@ -17,6 +17,7 @@ export { getCamera, getRenderer, getScene } from './core/index';
 // 标注元素
 export {
   generateArrowMap,
+  generateLineMap,
   generatePointMap,
   generatePolygonMap,
   generateTextMap,

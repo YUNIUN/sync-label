@@ -150,6 +150,19 @@ const polygonSchema = z.object({
 export const dependentAnnotateSchema = commonAnnotateSchema.extend(polygonSchema.shape);
 export type T_DependentAnnotate = z.infer<typeof dependentAnnotateSchema>;
 
+// 线配置
+const lineSchema = z.object({
+  positions: z.array(vector3Schema).default([]),
+  showID: z.boolean().default(false),
+  textConfig: textSchema.optional(),
+  lineWidth: z.number().default(1),
+  arrowSize: z.number().min(0).max(1).default(0),
+  dashSize: z.number().default(0),
+  gapSize: z.number().default(0),
+});
+export const dependentLineAnnotateSchema = commonAnnotateSchema.extend(lineSchema.shape);
+export type T_DependentLineAnnotate = z.infer<typeof dependentLineAnnotateSchema>;
+
 const standaloneDrawDataSchema = z.object({
   remove: z.map(idTypeSchema, standaloneAnnotateSchema),
   append: z.map(idTypeSchema, standaloneAnnotateSchema),
@@ -170,3 +183,10 @@ export const dependentDrawDataSchema = z.object({
   modify: z.map(idTypeSchema, dependentAnnotateSchema),
 });
 export type T_DependentDrawData = z.infer<typeof dependentDrawDataSchema>;
+
+export const dependentLineDrawDataSchema = z.object({
+  append: z.map(idTypeSchema, dependentLineAnnotateSchema),
+  remove: z.map(idTypeSchema, dependentLineAnnotateSchema),
+  modify: z.map(idTypeSchema, dependentLineAnnotateSchema),
+});
+export type T_DependentLineDrawData = z.infer<typeof dependentLineDrawDataSchema>;

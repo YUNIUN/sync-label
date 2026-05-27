@@ -18,6 +18,7 @@ import { T_ThreejsEngineOutput } from '../types/renderEngine/threejsEngine';
 import { getElement } from '../utils/getElement';
 import { standardizeColor } from '../utils/standardizeColor';
 import { BaseRenderEngine } from './BaseRenderEngine';
+import { DependentLinePrimitive } from './primitives/threejs/dependentLinePrimitive';
 import { DependentPrimitive } from './primitives/threejs/dependentPrimitive';
 import { DependentTextPrimitive } from './primitives/threejs/dependentTextPrimitive';
 import { StandalonePrimitive } from './primitives/threejs/standalonePrimitive';
@@ -218,9 +219,13 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
     sourceGeometry: BufferGeometry,
     material: Material,
     renderOrder: number,
-  ): StandalonePrimitive {
-    const standalonePrimitive = new StandalonePrimitive(sourceGeometry, material, renderOrder);
-    return standalonePrimitive;
+  ): DependentLinePrimitive {
+    const dependentLinePrimitive = new DependentLinePrimitive(
+      sourceGeometry,
+      material,
+      renderOrder,
+    );
+    return dependentLinePrimitive;
   }
   public generateDependentTextPrimitive(
     sourceGeometry: BufferGeometry,

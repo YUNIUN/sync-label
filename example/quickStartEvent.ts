@@ -8,6 +8,7 @@ export function registerEvent() {
   let textMap: any = null;
   let polygonMap: any = null;
   let arrowMap: any = null;
+  let lineMap: any = null;
   let camera: any = null;
   let frameNum: number = 0;
   const NUM = 300;
@@ -25,6 +26,7 @@ export function registerEvent() {
     textMap = SYNC_LABEL.generateTextMap();
     polygonMap = SYNC_LABEL.generatePolygonMap();
     arrowMap = SYNC_LABEL.generateArrowMap();
+    lineMap = SYNC_LABEL.generateLineMap();
     for (let i = 0; i < NUM; ++i) {
       const id = i.toString();
       const x = (Math.random() - 0.5) * 100;
@@ -52,7 +54,7 @@ export function registerEvent() {
         },
       });
     }
-    for (let i = 0; i < NUM; i++) {
+    for (let i = 0; i < ~~(NUM / 10); i++) {
       const id = i.toString();
       const x = (Math.random() - 0.5) * 100;
       const z = (Math.random() - 0.5) * 100;
@@ -163,6 +165,29 @@ export function registerEvent() {
         },
       });
     }
+    for (let i = 0; i < 10; i++) {
+      const positions = [];
+      for (let j = 0; j < 3; j++) {
+        const x = (Math.random() - 0.5) * 50;
+        const z = (Math.random() - 0.5) * 50;
+        const y = 0;
+        positions.push({ x, y, z });
+      }
+      const color =
+        '#' +
+        Math.floor(Math.random() * 0x7e7e7e + 0x808080)
+          .toString(16)
+          .padStart(6, '0');
+      const id = i.toString();
+      lineMap.set(id, {
+        id,
+        positions,
+        color,
+        lineWidth: 1,
+        arrowSize: 0.3,
+        showID: true,
+      });
+    }
     {
       camera = SYNC_LABEL.getCamera();
       camera.position.set(0, 80, 0);
@@ -205,6 +230,10 @@ export function registerEvent() {
             selected.add(id);
           }
         }
+        // for (let i = 0; i < NUM; i++) {
+        //   const id = i.toString();
+        //   selected.add(id);
+        // }
         stage = 1;
       } else {
         selected.forEach((id) => {

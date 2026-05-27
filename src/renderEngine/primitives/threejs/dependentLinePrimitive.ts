@@ -8,14 +8,13 @@ import {
 } from 'three';
 
 import { generateTextMap } from '../../../annotates/threejs/text/generateTextMap';
-import { triangulate3D } from '../../../math/triangulate3D';
 import { GlobalStore } from '../../../stores/globalStore';
 import { T_Vector3 } from '../../../types/common';
 import {
-  dependentAnnotateSchema,
+  dependentLineAnnotateSchema,
   dependentTextAnnotateSchema,
-  T_DependentAnnotate,
-  T_DependentDrawData,
+  T_DependentLineAnnotate,
+  T_DependentLineDrawData,
   T_DependentTextAnnotate,
   T_IDType,
 } from '../../../types/renderEngine/renderEngine';
@@ -24,16 +23,19 @@ import { BasePrimitive } from '../basePrimitive';
 import { MAX_COUNT } from '../const';
 
 type DrawData = {
-  p1: T_Vector3;
-  p2: T_Vector3;
-  p3: T_Vector3;
+  start: T_Vector3;
+  end: T_Vector3;
   color: { r: number; g: number; b: number; a: number };
+  lineWidth: number;
+  arrowSize: number;
+  dashSize: number;
+  gapSize: number;
   visible: boolean;
   opacity: number;
 };
 
 const __privateFieldMap = new WeakMap<
-  DependentPrimitive,
+  DependentLinePrimitive,
   {
     geometry: BufferGeometry;
     material: Material;
@@ -48,7 +50,7 @@ const __privateFieldMap = new WeakMap<
   }
 >();
 
-export class DependentPrimitive extends BasePrimitive {
+export class DependentLinePrimitive extends BasePrimitive {
   public count: number;
   constructor(sourceGeometry: BufferGeometry, material: Material, renderOrder: number) {
     super();
@@ -80,25 +82,25 @@ export class DependentPrimitive extends BasePrimitive {
       'instanceShown',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
-    // P1
+    // start
     geometry.setAttribute(
-      'instanceP1',
+      'instanceStart',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
-    // P2
+    // end
     geometry.setAttribute(
-      'instanceP2',
-      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
-    );
-    // P3
-    geometry.setAttribute(
-      'instanceP3',
+      'instanceEnd',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
     );
     // color
     geometry.setAttribute(
       'instanceColor',
       new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 3), 3),
+    );
+    // { lineWidth, arrowSize, dashSize, dashGap }
+    geometry.setAttribute(
+      'instanceStyle',
+      new InstancedBufferAttribute(new Float32Array(MAX_COUNT * 4), 4),
     );
 
     const instancedMesh = new InstancedMesh(geometry, material, MAX_COUNT);
@@ -113,7 +115,7 @@ export class DependentPrimitive extends BasePrimitive {
     scene.add(instancedMesh);
   }
 
-  public draw(data?: T_DependentDrawData): void {
+  public draw(data?: T_DependentLineDrawData): void {
     if (data !== void 0) {
       this.remove(data.remove);
       this.append(data.append);
@@ -123,7 +125,7 @@ export class DependentPrimitive extends BasePrimitive {
     }
   }
 
-  private remove(data: Map<T_IDType, T_DependentAnnotate>): void {
+  private remove(data: Map<T_IDType, T_DependentLineAnnotate>): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
     const availableSeat = privateMap.availableSeat;
@@ -142,23 +144,25 @@ export class DependentPrimitive extends BasePrimitive {
     });
   }
 
-  private append(data: Map<T_IDType, T_DependentAnnotate>): void {
+  private append(data: Map<T_IDType, T_DependentLineAnnotate>): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
     const availableSeat = privateMap.availableSeat;
     const occupiedSeat = privateMap.occupiedSeat;
     data.forEach((data, id) => {
-      const parsed = dependentAnnotateSchema.safeParse(data);
+      const parsed = dependentLineAnnotateSchema.safeParse(data);
       if (!parsed.success) throw new Error(parsed.error.message);
       const validData = parsed.data;
-      // 拆分多边形为三角形
-      const upDirect = this.getUpDirect(validData.positions);
-      const indexArr: Array<number> = triangulate3D(validData.positions, upDirect);
-      for (let i = 0; i < indexArr.length; i += 3) {
-        const p1: T_Vector3 = validData.positions[indexArr[i]];
-        const p2: T_Vector3 = validData.positions[indexArr[i + 1]];
-        const p3: T_Vector3 = validData.positions[indexArr[i + 2]];
-        const color = standardizeColor(validData.color);
+      for (let i = 0; i < validData.positions.length - 1; i++) {
+        const start: T_Vector3 = validData.positions[i];
+        const end: T_Vector3 = validData.positions[i + 1];
+        const lineWidth: number = validData.lineWidth;
+        const arrowSize: number = validData.arrowSize;
+        const dashSize: number = validData.dashSize;
+        const gapSize: number = validData.gapSize;
+        const color: { r: number; g: number; b: number; a: number } = standardizeColor(
+          validData.color,
+        );
         let index: number;
         if (availableSeat.size > 0) {
           const iterator = availableSeat.keys();
@@ -179,10 +183,13 @@ export class DependentPrimitive extends BasePrimitive {
           occupiedSeat.set(id, set);
         }
         this.updateByIndex(index, {
-          p1,
-          p2,
-          p3,
+          start,
+          end,
           color,
+          lineWidth,
+          arrowSize,
+          dashSize,
+          gapSize,
           opacity: validData.opacity,
           visible: validData.visible,
         });
@@ -192,29 +199,7 @@ export class DependentPrimitive extends BasePrimitive {
     instancedMesh!.count = Math.max(instancedMesh!.count, this.count);
   }
 
-  private getUpDirect(positions: T_Vector3[]): 'X' | 'Y' | 'Z' {
-    let xmin = Infinity,
-      ymin = Infinity,
-      zmin = Infinity;
-    let xmax = -Infinity,
-      ymax = -Infinity,
-      zmax = -Infinity;
-    for (const p of positions) {
-      if (xmin > p.x) xmin = p.x;
-      if (ymin > p.y) ymin = p.y;
-      if (zmin > p.z) zmin = p.z;
-      if (xmax < p.x) xmax = p.x;
-      if (ymax < p.y) ymax = p.y;
-      if (zmax < p.z) zmax = p.z;
-    }
-    const xDelta = xmax - xmin;
-    const yDelta = ymax - ymin;
-    const zDelta = zmax - zmin;
-    const minDelta = Math.min(xDelta, yDelta, zDelta);
-    return minDelta === xDelta ? 'X' : minDelta === yDelta ? 'Y' : 'Z';
-  }
-
-  private modify(data: Map<string, T_DependentAnnotate>): void {
+  private modify(data: Map<string, T_DependentLineAnnotate>): void {
     this.remove(data);
     this.append(data);
   }
@@ -223,16 +208,16 @@ export class DependentPrimitive extends BasePrimitive {
     const instancedMesh = __privateFieldMap.get(this)!.instancedMesh as InstancedMesh;
     if (!instancedMesh) throw new Error('instancedMesh is null');
     // 1. 渲染数据
-    const instanceP1 = instancedMesh.geometry.getAttribute('instanceP1');
-    instanceP1.setXYZ(index, data.p1.x, data.p1.y, data.p1.z);
-    const instanceP2 = instancedMesh.geometry.getAttribute('instanceP2');
-    instanceP2.setXYZ(index, data.p2.x, data.p2.y, data.p2.z);
-    const instanceP3 = instancedMesh.geometry.getAttribute('instanceP3');
-    instanceP3.setXYZ(index, data.p3.x, data.p3.y, data.p3.z);
+    const instanceStart = instancedMesh.geometry.getAttribute('instanceStart');
+    instanceStart.setXYZ(index, data.start.x, data.start.y, data.start.z);
+    const instanceEnd = instancedMesh.geometry.getAttribute('instanceEnd');
+    instanceEnd.setXYZ(index, data.end.x, data.end.y, data.end.z);
     const instanceColor = instancedMesh.geometry.getAttribute('instanceColor');
     const color = data.color;
     const factor = 1.0 / 255;
     instanceColor.setXYZ(index, color.r * factor, color.g * factor, color.b * factor);
+    const instanceStyle = instancedMesh.geometry.getAttribute('instanceStyle');
+    instanceStyle.setXYZW(index, data.lineWidth, data.arrowSize, data.dashSize, data.gapSize);
 
     // 2. 显示元素
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
@@ -250,34 +235,24 @@ export class DependentPrimitive extends BasePrimitive {
   private needsUpdate() {
     const instancedMesh = __privateFieldMap.get(this)!.instancedMesh;
     if (!instancedMesh) throw new Error('instancedMesh is null');
-    const instanceP1 = instancedMesh.geometry.getAttribute('instanceP1');
-    const instanceP2 = instancedMesh.geometry.getAttribute('instanceP2');
-    const instanceP3 = instancedMesh.geometry.getAttribute('instanceP3');
+    const instanceStart = instancedMesh.geometry.getAttribute('instanceStart');
+    const instanceEnd = instancedMesh.geometry.getAttribute('instanceEnd');
     const instanceColor = instancedMesh.geometry.getAttribute('instanceColor');
+    const instanceStyle = instancedMesh.geometry.getAttribute('instanceStyle');
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
-    instanceP1.needsUpdate = true;
-    instanceP2.needsUpdate = true;
-    instanceP3.needsUpdate = true;
+
+    instanceStart.needsUpdate = true;
+    instanceEnd.needsUpdate = true;
     instanceColor.needsUpdate = true;
+    instanceStyle.needsUpdate = true;
     instanceShown.needsUpdate = true;
   }
 
-  private updateID(data: T_DependentDrawData) {
+  private updateID(data: T_DependentLineDrawData) {
     const textMap: Map<T_IDType, T_DependentTextAnnotate> = __privateFieldMap.get(this)!.textMap;
-    const center = (positions: Array<T_Vector3>) => {
-      let x = 0,
-        y = 0,
-        z = 0;
-      for (const position of positions) {
-        x += position.x;
-        y += position.y;
-        z += position.z;
-      }
-      return {
-        x: x / positions.length,
-        y: y / positions.length,
-        z: z / positions.length,
-      };
+    const anchor = (positions: Array<T_Vector3>) => {
+      const position = positions[positions.length - 1];
+      return position;
     };
 
     data.remove.forEach((_, id) => {
@@ -293,9 +268,9 @@ export class DependentPrimitive extends BasePrimitive {
         id: id,
         color,
         content: item.textConfig?.content || id,
-        offset: item.textConfig?.offset || { x: 0, y: 0 },
+        offset: item.textConfig?.offset || { x: 10, y: 2 },
         fontSize: item.textConfig?.fontSize || 18,
-        position: center(item.positions),
+        position: anchor(item.positions),
         visible: item.visible,
       });
       if (!parsed.success) throw new Error(parsed.error.message);
@@ -312,9 +287,9 @@ export class DependentPrimitive extends BasePrimitive {
         id: id,
         color,
         content: item.textConfig?.content || id,
-        offset: item.textConfig?.offset || { x: 0, y: 0 },
+        offset: item.textConfig?.offset || { x: 10, y: 2 },
         fontSize: item.textConfig?.fontSize || 18,
-        position: center(item.positions),
+        position: anchor(item.positions),
         visible: item.visible,
       });
       if (!parsed.success) throw new Error(parsed.error.message);

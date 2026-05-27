@@ -2,7 +2,7 @@
 
 [English](https://github.com/YUNIUN/sync-label/blob/master/README_en.md)
 
-一个基于 Three.js 的高性能 3D 标注库，支持使用自定义着色器对点、多边形和文字进行实例化渲染。
+一个基于 Three.js 的高性能 3D 标注库，支持使用自定义着色器对点、多边形、线、箭头和文字进行实例化渲染。
 
 ## 性能分析
 
@@ -21,7 +21,8 @@
 
 - **高性能** — 基于 Three.js InstancedMesh + 自定义着色器，单实例可承载 10 万个标注元素，支持百万级标注点渲染
 - **帧批量响应式** — 自定义响应式系统，同一帧内的增删改操作会自动合并去重，仅在帧刷新时统一触发渲染更新
-- **可伸缩文字标签** — 点、多边形自带文字标签显示，支持屏幕空间偏移和缩放
+- **可伸缩文字标签** — 点、多边形、线自带文字标签显示，支持屏幕空间偏移和缩放
+- **线 & 箭头** — 支持线段（含虚线）和独立箭头实例，可在线段末端附着箭头
 - **自定义着色器** — 全部使用自定义 GLSL 着色器渲染，支持屏幕空间尺寸限制、独立透明度、旋转/缩放
 - **生命周期钩子** — 提供完整的帧循环生命周期：awake → beforeStart → start → (beforeUpdate → update → render → afterUpdate → nextFrame) → destroy
 
@@ -54,6 +55,8 @@ await SYNC_LABEL.init({
 const pointMap = SYNC_LABEL.generatePointMap();
 const polygonMap = SYNC_LABEL.generatePolygonMap();
 const textMap = SYNC_LABEL.generateTextMap();
+const lineMap = SYNC_LABEL.generateLineMap();
+const arrowMap = SYNC_LABEL.generateArrowMap();
 
 // 3. 添加标注
 pointMap.set('point-1', {
@@ -77,6 +80,30 @@ polygonMap.set('poly-1', {
   showID: true,
 });
 
+lineMap.set('line-1', {
+  id: 'line-1',
+  positions: [
+    { x: -5, y: 0, z: -5 },
+    { x: 0, y: 0, z: 0 },
+    { x: 5, y: 0, z: 5 },
+  ],
+  color: '#ff0000ff',
+  lineWidth: 2,
+  arrowSize: 0.5,   // 末端箭头大小，0 为无箭头
+  dashSize: 1,       // 实线长度（虚线模式）
+  gapSize: 0,        // 间隙长度（0 为实线）
+  showID: true,
+});
+
+arrowMap.set('arrow-1', {
+  id: 'arrow-1',
+  position: { x: 0, y: 0, z: 0 },
+  rotation: { x: 0, y: 0, z: Math.PI / 4 },
+  width: 2,          // 箭头底部宽度
+  height: 6,         // 箭头长度
+  color: '#00ff00ff',
+});
+
 // 4. 更新/删除元素（响应式自动触发渲染）
 pointMap.delete('point-1');
 pointMap.set('point-2', { ... });
@@ -94,6 +121,8 @@ pointMap.set('point-2', { ... });
 |------|------|------|
 | `generatePointMap()` | `Map<string, T_StandaloneAnnotate>` | 创建点标注集合（独立实例，支持独立变换） |
 | `generatePolygonMap()` | `Map<string, T_DependentAnnotate>` | 创建多边形标注集合（自动三角剖分） |
+| `generateLineMap()` | `Map<string, T_DependentLineAnnotate>` | 创建线段标注集合（支持虚线、末端箭头） |
+| `generateArrowMap()` | `Map<string, T_StandaloneAnnotate>` | 创建箭头标注集合（独立实例，支持独立变换） |
 | `generateTextMap()` | `Map<string, T_DependentTextAnnotate>` | 创建文字标注集合 |
 
 生成的 Map 是响应式的，标准的 `set`/`delete`/`clear` 操作会自动触发渲染更新。
@@ -126,14 +155,14 @@ pointMap.set('point-2', { ... });
 src/
 ├── core/          初始化、销毁、生命周期、尺寸适配
 ├── renderEngine/  渲染引擎抽象层 (BaseRenderEngine → ThreejsRenderEngine)
-│   └── primitives/  标注原语 (StandalonePrimitive / DependentPrimitive / DependentTextPrimitive)
-├── annotates/     标注生成器 (point / polygon / text)，各包含几何体、材质、着色器
+│   └── primitives/  标注原语 (StandalonePrimitive / DependentPrimitive / DependentLinePrimitive / DependentTextPrimitive)
+├── annotates/     标注生成器 (point / polygon / line / arrow / text)，各包含几何体、材质、着色器
 ├── reactivity/    自定义帧批量响应式系统 (ref / effect / reactive / computed)
 ├── stores/        GlobalStore 全局单例
 ├── types/         基于 Zod 的类型定义和校验
 ├── math/          三角剖分、凸多边形判断、碰撞检测
 ├── utils/         工具函数
-└── config/        渲染顺序常量
+└── config/        渲染顺序常量 (polygon=1000, line=1100, point=1200, arrow=1300, text=1400)
 ```
 
 ### 渲染机制

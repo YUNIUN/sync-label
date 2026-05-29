@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Vector3 } from 'three';
 
+import { T_Vector3 } from '@/types/common';
+
 import * as SYNC_LABEL from '../src/index';
 
 export function registerEvent() {
@@ -200,6 +202,7 @@ export function registerEvent() {
 
   SYNC_LABEL.onUpdate(() => {
     animation(9000);
+    lineAnimation();
   });
 
   SYNC_LABEL.onAfterUpdate(() => {
@@ -289,5 +292,83 @@ export function registerEvent() {
     if (stage === 0) select();
     if (stage === 1) grow(-1);
     if (stage === 2) grow(1);
+  }
+  let step = 0;
+  function lineAnimation() {
+    if (!lineMap) return;
+    const getPos = (progress: number, adsorb: boolean = false) => {
+      const mix = (a: T_Vector3, b: T_Vector3, c: number) => {
+        return {
+          x: a.x * (1 - c) + b.x * c,
+          y: a.y * (1 - c) + b.y * c,
+          z: a.z * (1 - c) + b.z * c,
+        };
+      };
+      const getFract = (n: number) => {
+        return n - Math.floor(n);
+      };
+
+      const length = 110;
+      const path = [
+        { x: -length * 0.5, y: 0, z: -length * 0.5 },
+        { x: -length * 0.5, y: 0, z: length * 0.5 },
+        { x: length * 0.5, y: 0, z: length * 0.5 },
+        { x: length * 0.5, y: 0, z: -length * 0.5 },
+      ];
+      const getT = (pro: number) => {
+        const sum = length * 4;
+        const p = getFract(pro / sum) * sum;
+        const t = p / sum;
+        return t;
+      };
+      const t = getT(progress);
+      const c_index = Math.floor(t * 4);
+      const n_index = (c_index + 1) % 4;
+      if (adsorb) {
+        const p_t = ~~(getT(progress - 40) * 4);
+        const n_t = ~~(getT(progress + 40) * 4);
+        if (p_t !== n_t) {
+          return path[n_t];
+        }
+      }
+      return mix(path[c_index], path[n_index], getFract(getFract(t * 4)));
+    };
+    lineMap.set('dl1', {
+      id: 'dl1',
+      color: { r: 255, g: 255, b: 0, a: 255 },
+      positions: [
+        getPos(0.0 + step * 0.2),
+        getPos(40.0 + step * 0.2, true),
+        getPos(80.0 + step * 0.2, true),
+        getPos(120.0 + step * 0.2),
+      ],
+      arrowSize: 0.3,
+      dashSize: 10,
+      gapSize: 5,
+      showID: true,
+      lineWidth: 2,
+      textConfig: {
+        fontSize: 28,
+      },
+    });
+    lineMap.set('dl2', {
+      id: 'dl2',
+      color: { r: 255, g: 255, b: 0, a: 255 },
+      positions: [
+        getPos(240 + 0.0 + step * 0.2),
+        getPos(240 + 40.0 + step * 0.2, true),
+        getPos(240 + 80.0 + step * 0.2, true),
+        getPos(240 + 120.0 + step * 0.2),
+      ],
+      arrowSize: 0.02,
+      dashSize: 10,
+      gapSize: 5,
+      showID: true,
+      lineWidth: 2,
+      textConfig: {
+        fontSize: 28,
+      },
+    });
+    ++step;
   }
 }

@@ -1,4 +1,3 @@
-// #define DASHED
 const vertex = `
 attribute vec3 instanceP1;
 attribute vec3 instanceP2;

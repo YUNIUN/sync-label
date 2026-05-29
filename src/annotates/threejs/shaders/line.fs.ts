@@ -1,4 +1,3 @@
-// #define DASHED
 const fragment = `
 varying float vType;
 varying float vLinewidth;
@@ -24,14 +23,17 @@ void main() {
     vec3 diff = vInstanceColor;
     
     float aliasing = 1.0;
+    float edge = max(8.0, vLinewidth / 1.0);
     if (vUv.y < 1.0 || vType < 0.000001) {
-        aliasing = max(0.0, min(1.0, mix(1.0, 0.0, (abs(vUv.x) - vWidthRatio) * max(1.0, vLinewidth) * 8.0)));
+        float x = mix(1.0, 0.0, (abs(vUv.x) - vWidthRatio) * edge);
+        aliasing = clamp(x, 0.0, 1.0);
     }
     if (vUv.y < -1.0 || (vType < 0.000001 && vUv.y > 1.0)) {
         float a = vUv.x / vWidthRatio;
         float b = abs(vUv.y) - 1.0;
         float len = length(vec2(a, b));
-        aliasing *= max(0.0, min(1.0, mix(1.0, 0.0, (len - 0.9) * 10.0)));
+        float factor = mix(1.0, 0.0, (len - max(0.95, 1.0 - 1.0 / vLinewidth)) * edge);
+        aliasing *= clamp(factor, 0.0, 1.0);
     }
     
     gl_FragColor = vec4(diff, vInstanceShown.x * vInstanceShown.y * vInstanceShown.z * aliasing);

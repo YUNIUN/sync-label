@@ -1,4 +1,3 @@
-// #define DASHED
 const fragment = `
 varying vec3 vInstanceShown;
 varying vec3 vInstanceColor;

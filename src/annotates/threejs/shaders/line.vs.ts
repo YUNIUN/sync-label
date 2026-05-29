@@ -1,4 +1,3 @@
-// #define DASHED
 const vertex = `
 attribute vec3 instanceStart;
 attribute vec3 instanceEnd;
@@ -61,25 +60,24 @@ void main() {
     vec2 dir = ndcEnd.xy - ndcStart.xy;
     vec2 screenLineDir = dir * screenResolution * 0.5;
     float len = length(screenLineDir);
-    vLineDistance = vec3(len, instanceStyle.z, instanceStyle.w); // 线段长度、虚线长度、虚线间距
+    vLineDistance = vec3(len, instanceStyle.z, instanceStyle.w);
     screenLineDir = normalize(screenLineDir);
-    vec2 screenVerticalOffset = vec2(screenLineDir.y, -screenLineDir.x); // 线段垂直方向
-    screenVerticalOffset *= sign(position.x); // 根据顶点位置决定偏移方向
+    vec2 screenVerticalOffset = vec2(screenLineDir.y, -screenLineDir.x);
+    screenVerticalOffset *= sign(position.x);
     vec2 screenOffset = vec2(0.0, 0.0);
     vType = instanceStyle.y;
 
-    // ========== 处理普通线段 vs 箭头 ==========
     if (instanceStyle.y < 0.000001) {
         vWidthRatio = 0.1;
-        screenOffset += (-whenLt(position.y, -0.5) + whenGt(position.y, 1.5)) * screenLineDir * linewidth * 0.5; // 圆头偏移
+        screenOffset += (-whenLt(position.y, -0.5) + whenGt(position.y, 1.5)) * screenLineDir * linewidth * 0.5;
         screenOffset += screenVerticalOffset * linewidth * 0.5 / vWidthRatio;
     } else {
-        screenOffset += -whenLt(position.y, -0.5) * screenLineDir * linewidth * 0.5; // 起始端圆头偏移
+        screenOffset += -whenLt(position.y, -0.5) * screenLineDir * linewidth * 0.5;
         float arrowWidth = mix(linewidth + 4.0, linewidth + 20.0, instanceStyle.y);
         float arrowLength = min(arrowWidth * 3.0, len * 0.3);
         vWidthRatio = linewidth / arrowWidth;
         linewidth = whenLt(position.y, 1.5) * arrowWidth;
-        screenOffset += -whenEq(position.y, 1.0) * screenLineDir * arrowLength; // 线段减去箭头偏移
+        screenOffset += -whenEq(position.y, 1.0) * screenLineDir * arrowLength;
         screenOffset += screenVerticalOffset * linewidth * 0.5;
     }
 

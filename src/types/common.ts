@@ -32,3 +32,20 @@ export const vector4Schema = z.object({
 export type T_Vector2 = z.infer<typeof vector2Schema>;
 export type T_Vector3 = z.infer<typeof vector3Schema>;
 export type T_Vector4 = z.infer<typeof vector4Schema>;
+
+const sphereBoundingSchema = z.object({
+  isSphereBounding: z.literal(true),
+  center: vector3Schema,
+  radius: z.number(),
+});
+const boxBoundingSchema = z.object({
+  isBoxBounding: z.literal(true),
+  min: vector3Schema,
+  max: vector3Schema,
+});
+const boundingSchema = z.union([sphereBoundingSchema, boxBoundingSchema]);
+export type T_SphereBounding = z.infer<typeof sphereBoundingSchema>;
+export type T_BoxBounding = z.infer<typeof boxBoundingSchema>;
+export type T_Bounding = z.infer<typeof boundingSchema>;
+const octreeSchema = z.record(z.string(), z.any());
+export type T_Octree = z.infer<typeof octreeSchema>;

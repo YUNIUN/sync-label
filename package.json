@@ -2,14 +2,13 @@
   "name": "sync-label",
   "version": "0.0.1",
   "description": "基于 Three.js 的高性能 3D 标注库，支持点、多边形和文字的实例化渲染与自定义响应式系统",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/index.es.js",
+  "module": "dist/index.es.js",
   "browser": "dist/index.umd.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.es.js",
       "types": "./dist/index.d.ts"
     }
   },

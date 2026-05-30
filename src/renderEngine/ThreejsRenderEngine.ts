@@ -148,7 +148,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
     if (scene) {
       function clearObject3D(obj3d?: Object3D) {
         if (!obj3d) return;
-        obj3d?.traverse((child) => {
+        for (const child of obj3d.children) {
           if (child.children && child.children.length > 0) {
             clearObject3D(child);
           }
@@ -165,7 +165,7 @@ export class ThreejsRenderEngine extends BaseRenderEngine {
               material.dispose();
             }
           }
-        });
+        }
         obj3d.clear();
       }
       clearObject3D(scene);

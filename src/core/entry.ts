@@ -55,7 +55,7 @@ export async function init(config: T_SyncLabelConfig) {
   const { renderer } = engine.init();
   if (!renderer) throw new Error('renderer is null');
   globalStore.engine = engine;
-  globalStore.destroys = { func: engine.destroy, delay: 0 };
+  globalStore.destroys = { func: engine.destroy.bind(engine), delay: 0 };
   // resize
   globalStore.resizes = engine.resize.bind(engine);
   const element = renderer.domElement.parentElement;

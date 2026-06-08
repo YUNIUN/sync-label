@@ -65,7 +65,7 @@ export class StandalonePrimitive extends BasePrimitive {
   private init(): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
-    const geometry: BufferGeometry = privateMap.geometry;
+    const geometry: BufferGeometry = privateMap.geometry.clone();
     const material = privateMap.material;
     // { shownFlag, alpha, visible }
     geometry.setAttribute(

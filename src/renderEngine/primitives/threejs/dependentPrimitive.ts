@@ -73,7 +73,7 @@ export class DependentPrimitive extends BasePrimitive {
   private init(): void {
     const privateMap = __privateFieldMap.get(this);
     if (!privateMap) throw new Error('privateMap is null');
-    const geometry = privateMap.geometry;
+    const geometry = privateMap.geometry.clone();
     const material = privateMap.material;
     // { shownFlag, alpha, visible }
     geometry.setAttribute(

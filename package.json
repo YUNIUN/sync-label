@@ -1,6 +1,6 @@
 {
   "name": "sync-label",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "基于 Three.js 的高性能 3D 标注库，支持点、多边形和文字的实例化渲染与自定义响应式系统",
   "main": "dist/index.es.js",
   "module": "dist/index.es.js",
@@ -23,8 +23,17 @@
     "lint": "eslint src/",
     "format": "prettier --write src/"
   },
-  "files": ["dist"],
-  "keywords": ["3d", "annotation", "WebGL", "Three.js", "label", "instanced"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "3d",
+    "annotation",
+    "WebGL",
+    "Three.js",
+    "label",
+    "instanced"
+  ],
   "author": "YUNIUN",
   "license": "Mozilla Public License 2.0",
   "repository": {
@@ -39,8 +48,10 @@
   "type": "module",
   "dependencies": {
     "lodash-es": "^4.18.1",
-    "three": "^0.184.0",
     "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",

@@ -75,6 +75,9 @@ export function generateLineMap() {
             data.append.delete(id);
           }
         }
+        if (!subData.append.size && !subData.modify.size && !subData.remove.size) {
+          break;
+        }
         linePrimitive.draw(subData);
         ++index;
       }

@@ -75,6 +75,9 @@ export function generatePolygonMap() {
             data.append.delete(id);
           }
         }
+        if (!subData.append.size && !subData.modify.size && !subData.remove.size) {
+          break;
+        }
         polygonPrimitive.draw(subData);
         ++index;
       }

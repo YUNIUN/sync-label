@@ -153,6 +153,10 @@ export class DependentLinePrimitive extends BasePrimitive {
       const parsed = dependentLineAnnotateSchema.safeParse(data);
       if (!parsed.success) throw new Error(parsed.error.message);
       const validData = parsed.data;
+      if (validData.positions.length < 2) {
+        const set = new Set<number>();
+        occupiedSeat.set(id, set);
+      }
       for (let i = 0; i < validData.positions.length - 1; i++) {
         const start: T_Vector3 = validData.positions[i];
         const end: T_Vector3 = validData.positions[i + 1];
@@ -259,6 +263,7 @@ export class DependentLinePrimitive extends BasePrimitive {
       textMap.delete(id);
     });
     data.append.forEach((item, id) => {
+      if (item.positions.length < 2) return;
       if (!item.showID) {
         return;
       }

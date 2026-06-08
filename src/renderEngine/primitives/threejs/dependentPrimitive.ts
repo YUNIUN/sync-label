@@ -154,7 +154,11 @@ export class DependentPrimitive extends BasePrimitive {
       // 拆分多边形为三角形
       const upDirect = this.getUpDirect(validData.positions);
       const indexArr: Array<number> = triangulate3D(validData.positions, upDirect);
-      for (let i = 0; i < indexArr.length; i += 3) {
+      if (validData.positions.length < 3) {
+        const set = new Set<number>();
+        occupiedSeat.set(id, set);
+      }
+      for (let i = 0; i < indexArr.length - 2; i += 3) {
         const p1: T_Vector3 = validData.positions[indexArr[i]];
         const p2: T_Vector3 = validData.positions[indexArr[i + 1]];
         const p3: T_Vector3 = validData.positions[indexArr[i + 2]];
@@ -284,6 +288,7 @@ export class DependentPrimitive extends BasePrimitive {
       textMap.delete(id);
     });
     data.append.forEach((item, id) => {
+      if (item.positions.length < 3) return;
       if (!item.showID) {
         return;
       }

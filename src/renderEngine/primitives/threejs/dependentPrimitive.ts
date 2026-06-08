@@ -151,13 +151,14 @@ export class DependentPrimitive extends BasePrimitive {
       const parsed = dependentAnnotateSchema.safeParse(data);
       if (!parsed.success) throw new Error(parsed.error.message);
       const validData = parsed.data;
-      // 拆分多边形为三角形
-      const upDirect = this.getUpDirect(validData.positions);
-      const indexArr: Array<number> = triangulate3D(validData.positions, upDirect);
       if (validData.positions.length < 3) {
         const set = new Set<number>();
         occupiedSeat.set(id, set);
+        return;
       }
+      // 拆分多边形为三角形
+      const upDirect = this.getUpDirect(validData.positions);
+      const indexArr: Array<number> = triangulate3D(validData.positions, upDirect);
       for (let i = 0; i < indexArr.length - 2; i += 3) {
         const p1: T_Vector3 = validData.positions[indexArr[i]];
         const p2: T_Vector3 = validData.positions[indexArr[i + 1]];
@@ -240,7 +241,7 @@ export class DependentPrimitive extends BasePrimitive {
 
     // 2. 显示元素
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
-    instanceShown.setXYZ(index, 1, color.a * factor, data.visible ? 1 : 0);
+    instanceShown.setXYZ(index, 1, color.a * factor * data.opacity, data.visible ? 1 : 0);
   }
 
   private hideByIndex(index: number): void {

@@ -14,6 +14,14 @@ export default defineConfig({
       name: 'SYNC_LABEL',
       fileName: (format) => `index.${format}.js`,
     },
+    rollupOptions: {
+      external: ['three'],
+      output: {
+        globals: {
+          three: 'THREE',
+        },
+      },
+    },
   },
   plugins: [
     dts({

@@ -225,7 +225,7 @@ export class DependentLinePrimitive extends BasePrimitive {
 
     // 2. 显示元素
     const instanceShown = instancedMesh.geometry.getAttribute('instanceShown');
-    instanceShown.setXYZ(index, 1, color.a * factor, data.visible ? 1 : 0);
+    instanceShown.setXYZ(index, 1, color.a * factor * data.opacity, data.visible ? 1 : 0);
   }
 
   private hideByIndex(index: number): void {

@@ -1,6 +1,6 @@
 {
   "name": "sync-label",
-  "version": "0.0.5",
+  "version": "0.0.8",
   "description": "基于 Three.js 的高性能 3D 标注库，支持点、多边形和文字的实例化渲染与自定义响应式系统",
   "main": "dist/index.es.js",
   "module": "dist/index.es.js",

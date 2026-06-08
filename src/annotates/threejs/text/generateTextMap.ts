@@ -54,11 +54,11 @@ export function generateTextMap() {
         }
         const removeNum = subData.remove
           .values()
-          .reduce((acc, cur) => acc + (cur.content || '').length, 0);
+          .reduce((acc, cur) => acc + (cur?.content || '').length, 0);
         const restNum = textPrimitive.getRestNum() + removeNum;
         const appendNum = data.append
           .values()
-          .reduce((acc, cur) => acc + (cur.content || '').length, 0);
+          .reduce((acc, cur) => acc + (cur?.content || '').length, 0);
 
         if (restNum >= appendNum) {
           subData.append = cloneDeep(data.append);

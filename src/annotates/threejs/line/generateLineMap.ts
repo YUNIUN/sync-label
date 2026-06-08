@@ -55,11 +55,11 @@ export function generateLineMap() {
         }
         const removeNum = subData.remove
           .values()
-          .reduce((acc, cur) => acc + lineNum((cur.positions || []).length), 0);
+          .reduce((acc, cur) => acc + lineNum((cur?.positions || []).length), 0);
         const restNum = linePrimitive.getRestNum() + removeNum;
         const appendNum = data.append
           .values()
-          .reduce((acc, cur) => acc + lineNum((cur.positions || []).length), 0);
+          .reduce((acc, cur) => acc + lineNum((cur?.positions || []).length), 0);
 
         if (restNum >= appendNum) {
           subData.append = cloneDeep(data.append);
